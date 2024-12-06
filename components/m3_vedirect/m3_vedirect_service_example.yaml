@@ -1,0 +1,136 @@
+# This configuration snippet shows how to setup a basic 'diagnostic' node which is able to interface to any kind
+# of VEDirect equipment and automatically create any entity for values which are automatically broadcasted by
+# the device either via TEXT frames or via HEX frames.
+# Some records (and hex registers) are being automatically normalized (see 'flavor') and created as proper
+# numeric or binary sensors (or more specialized entities) depending on this knowledge
+# (see 've_reg_text.h' 've_reg_register.h' for clues)
+# Also, the ability to send HEX frames commands through an HA service is exposed.
+
+api:
+  encryption:
+    key: !secret api_key
+  services:
+    - service: send_hexframe
+      # Parameter 'vedirect_id' must be set to address any of the possibly multiple components defined here.
+      # When invoking from HA use 'vedirect_0' to address our currently defined node or '*' to address any
+      # and all.
+      # Parameter 'data' is the hex encoded payload to be sent (without the final checksum byte)
+      # For example '1' will send a ping to the device
+      variables:
+        vedirect_id: string
+        data: string
+      then:
+        - m3_vedirect.send_hexframe:
+            vedirect_id: !lambda "return vedirect_id;"
+            data: !lambda "return data;"
+    - service: send_command
+      # This service is better suited for hex registers GET/SET commands. Parameters need not to be
+      # hex encoded since the frame will be built by the node itself aggregating the provided parameters
+      # values.
+      # 'data' could be any integer type value and will be truncated as needed by specifing 'data_size'
+      # in order to send uint8/int8, uint16/int16 or uint32/int32
+      variables:
+        vedirect_id: string
+        command: int
+        register_id: int
+        data: int
+        data_size: int
+      then:
+        - m3_vedirect.send_command:
+            vedirect_id: !lambda "return vedirect_id;"
+            command: !lambda "return command;"
+            register_id: !lambda "return (m3_vedirect::register_id_t)register_id;"
+            data: !lambda "return data;"
+            data_size: !lambda "return data_size;"
+
+uart:
+  - id: uart_0
+    tx_pin: GPIO4
+    rx_pin: GPIO5
+    baud_rate: 19200
+    rx_buffer_size: 256
+
+m3_vedirect:
+  - id: vedirect_0
+    uart_id: uart_0
+    name: "Victron"
+    flavor: [ALL]
+    # flavor: [] optional
+    # Provides presets for common entity types which can be automatically instantiated when the device
+    # exposes them (see auto_create_entities). This option works as an optimization for memory usage
+    # since you can fine-tune which group of entity types are compiled/linked into the node in order to
+    # be automatically generated at runtime. You can add as many flavors as needed from the list of available
+    # ones which is [ALL,INV_PHNX,CHG_PHNX,MPPT_BS,MPPT_RS,BMV60,BMV70,BMV71,MPPT,BMV,CHG,INV,ANY].
+    # Flavor ALL means all the flavors are included (just a shortcut to avoid including each single item)
+    # Flavor ANY relates to entity types which are usually present in every other flavor (this one too is
+    # automatically included whenever a specific flavor is included/defined). Flavors work like an hierarchy
+    # so that when you define MPPT_BS (Blue Solar MPPTs) the code automatically assumes
+    # flavors MPPT - CHG - ANY are defined.
+    # Setting flavor: [] in config.yaml will disable all the flavors so no pre-defined register grammar is
+    # in place. This will save some statically allocated memory but also, if using 'auto_create_entities',
+    # entities will be created as plain text sensors without any knowledge of their semantics.
+    # Not setting 'flavor' in config.yaml will by default enable all flavors (like 'flavor: [ALL]')
+    textframe:
+      auto_create_entities: true
+      # This will create an entity for each record carried in the TEXT FRAME. Depending on 'flavor' and
+      # the availability of the specific platform an entity will be generated and registered depending on
+      # the data type carried by the TEXT frame record. The entities will be created as soon as a TEXT FRAME
+      # enters the node.
+    hexframe:
+      auto_create_entities: true
+      # Same as 'textframe:auto_create_entities' but for entities/values carried over HEX frames.
+      ping_timeout: 2min
+      # HEX frames are usually not sent/broadcasted by the device unless it is 'forced' to do so by
+      # explicitly querying an HEX register or issuing any HEX command. This option, if set, will
+      # periodically query the device in HEX mode so that it keeps broadcasting HEX register values.
+      # Depending on usage scenario (and esp node hw type) might be cumbersome for the esphome node
+      # to keep managing all these data broadcasts.
+      # Setting 'ping_timeout' to 0 will disable the feature and the device should not enter HEX mode
+      # broadcast (Depending on VEDirect fw the device might enter HEX broadcast mode at boot but then
+      # exit it (after a couple of minutes) as soon as no HEX commands/messages are received by the device)
+      on_frame_received:
+        # This event is generated whenever a valid HEX frame is received. Here we're forwarding the data to
+        # an HA event so that it could be detected in HA event bus.
+        - homeassistant.event:
+            event: esphome.m3_vedirect_hexframe
+            data:
+              payload: !lambda "return std::string(hexframe.encoded());"
+
+binary_sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    link_connected:
+      # This entity carries the actual state of the VEDirect serial link. After 5 seconds (hard-encoded)
+      # of no received data the link_connected sensor will go 'OFF'
+      name: "VEDirect link"
+
+number:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+
+select:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+
+sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+
+switch:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+
+text_sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    rawtextframe:
+      # Textual representation of the last received TEXT FRAME
+      # Warning: updates every 1 second or so..might consume a lot of storage in HA
+      id: textframe_0
+      name: "VEDirect textframe"
+    rawhexframe:
+      # Textual representation of the last received HEX FRAME
+      # Warning: when device broadcasts HEX frames this might be updated several times per second
+      # going to consume a lot of storage in HA and maybe overload HA events dispatching.
+      id: hexframe_0
+      name: "VEDirect hexframe"

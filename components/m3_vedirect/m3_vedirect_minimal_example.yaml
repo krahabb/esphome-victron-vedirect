@@ -1,0 +1,59 @@
+# This config snippet provides a minimal easy configuration to read only TEXT frames data.
+# Depending on 'flavor' memory consumption could be optimized for the device we're interfacing.
+# Actual entities will be automatically created when the first TEXT frame enters the node so there's
+# no need to provide a definition for eache entity/value in this config file.
+
+uart:
+  - id: uart_0
+    tx_pin: GPIO4
+    rx_pin: GPIO5
+    baud_rate: 19200
+    rx_buffer_size: 256
+
+m3_vedirect:
+  - id: vedirect_0
+    uart_id: uart_0
+    name: "Victron"
+    flavor: [ALL]
+    # flavor: [] optional
+    # Provides presets for common entity types which can be automatically instantiated when the device
+    # exposes them (see auto_create_entities). This option works as an optimization for memory usage
+    # since you can fine-tune which group of entity types are compiled/linked into the node in order to
+    # be automatically generated at runtime. You can add as many flavors as needed from the list of available
+    # ones which is [ALL,INV_PHNX,CHG_PHNX,MPPT_BS,MPPT_RS,BMV60,BMV70,BMV71,MPPT,BMV,CHG,INV,ANY].
+    # Flavor ALL means all the flavors are included (just a shortcut to avoid including each single item)
+    # Flavor ANY relates to entity types which are usually present in every other flavor (this one too is
+    # automatically included whenever a specific flavor is included/defined). Flavors work like an hierarchy
+    # so that when you define MPPT_BS (Blue Solar MPPTs) the code automatically assumes
+    # flavors MPPT - CHG - ANY are defined.
+    # Setting flavor: [] in config.yaml will disable all the flavors so no pre-defined register grammar is
+    # in place. This will save some statically allocated memory but also, if using 'auto_create_entities',
+    # entities will be created as plain text sensors without any knowledge of their semantics.
+    # Not setting 'flavor' in config.yaml will by default enable all flavors (like 'flavor: [ALL]')
+    textframe:
+      auto_create_entities: true
+      # This will create an entity for each record carried in the TEXT FRAME. Depending on 'flavor' and
+      # the availability of the specific platform an entity will be generated and registered depending on
+      # the data type carried by the TEXT frame record. The entities will be created as soon as a TEXT FRAME
+      # enters the node.
+
+binary_sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    link_connected:
+      # This entity carries the actual state of the VEDirect serial link. After 5 seconds (hard-encoded)
+      # of no received data the link_connected sensor will go 'OFF'
+      name: "VEDirect link"
+
+sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+
+text_sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    rawtextframe:
+      # Textual representation of the last received TEXT FRAME
+      # Warning: updates every 1 second or so..might consume a lot of storage in HA
+      id: textframe_0
+      name: "VEDirect textframe"
