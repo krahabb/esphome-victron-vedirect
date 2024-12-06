@@ -5,6 +5,9 @@
 # numeric or binary sensors (or more specialized entities) depending on this knowledge
 # (see 've_reg_text.h' 've_reg_register.h' for clues)
 
+external_components:
+  source: github://krahabb/esphome-victron-vedirect
+
 uart:
   - id: uart_0
     tx_pin: GPIO4
