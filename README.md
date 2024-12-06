@@ -31,3 +31,6 @@ There are some sample configurations with a basic explanation of the features fo
 More help and wiki will come.
 
 Good interfacing!
+
+## Notes
+This is a 'replica' of the same component as developed on https://github.com/krahabb/esphome. This repository is just an extraction in order to raise its public status.
