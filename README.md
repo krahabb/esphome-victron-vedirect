@@ -28,6 +28,74 @@ There are some sample configurations with a basic explanation of the features fo
 - [m3_vedirect_minimal_example.yaml](https://github.com/krahabb/esphome-victron-vedirect/blob/main/components/m3_vedirect/m3_vedirect_minimal_example.yaml)
 - [m3_vedirect_service_example.yaml](https://github.com/krahabb/esphome-victron-vedirect/blob/main/components/m3_vedirect/m3_vedirect_service_example.yaml)
 
+These samples mostly use the 'auto create' feature in order to automatically create an entity for any register data appearing on the communication channel. This might help to start over but could soon become cumbersome since HEX broadcasted registers might be a lot and the component will create HA entities for any of these.
+
+We'll see then how to better configure the device for only the needed entities.
+
+### Manual configuration
+Victron devices expose a lot of registers each one carrying either measured data (battery voltage for instance) or a configuration parameter (or some static info like device model, hw & sw revision, and so on). In general, TEXT frames only carry a subset of these (both measures and some info/configuration), while HEX frames can address and carry any register.
+Since there are so many registers and most of them are unknown, this component allows you to specify all of the details needed to decode/map any register data to a specific entity (this is an advanced feature and you really need to know how those registers work). This will be covered later.
+
+For simple use cases instead you can use some 'well known' registers definitions which are already embedded in the component (this is related to the 'flavor' configuration). We'll go with some examples for really basic and widely used registers in order to understand this.
+
+Example 1:
+Configure some sensors for `battery voltage`, `battery current`, `pv power`.
+Here things might be tricky since the component nomenclature tries to use the same conventional names used by Victron docs so let's start to say that (in general) battery voltage in Victron appliances is carried in register `VE_REG_DC_CHANNEL1_VOLTAGE` (and the same reasoning is behind the other entities).
+Having said that, in order to setup these sensors you have to configure it like this (for other configuration settings check the samples):
+```yaml
+m3_vedirect:
+  - id: vedirect_0
+    uart_id: uart_0
+    name: "Victron"
+    flavor: [ALL]
+    textframe:
+      auto_create_entities: false
+    hexframe:
+      auto_create_entities: false
+      ping_timeout: 2min
+
+sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0    
+    vedirect_entities:
+      - type: DC_CHANNEL1_VOLTAGE
+        name: 'Battery voltage'
+      - type: DC_CHANNEL1_CURRENT
+        name: 'Battery current'
+      - type: PANEL_POWER
+        name: 'PV power'
+```
+Using the `type` configuration will automatically set all of the needed info in order to correctly decode the register carrying the battery voltage (DC_CHANNEL1_VOLTAGE) and setup the sensor entity with proper unit, digits and scale. Now, keep in mind the `DC_CHANNEL1_VOLTAGE`-`DC_CHANNEL1_CURRENT`-`PANEL_POWER` registers are defined as `NUMERIC` in 'component terms' and that allows them to be configured as (numeric) sensors (this is useful when inspecting the list of available pre-defined registers published later in order to know which kind of entity supports it)
+
+Let's see another useful 
+Example 2:
+configure a text_sensor for `DEVICE_STATE`
+```yaml
+text_sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0    
+    vedirect_entities:
+      - type: DEVICE_STATE
+        name: 'Device state (enum)'
+```
+Register `DEVICE_STATE` (hex address 0x0201) is encoded as an `ENUM` and this component carries (hardcoded in english) the different labels associated with those enum values (according to Victron official nomenclature) so that the text sensor will show you these labels instead of numeric values. This is true for any register defined as `ENUM` so that the text sensor will always try to map the numeric value to a meaningful label. 
+If you want to see the underlying numeric value it is possible though: just use a sensor definition instead of a text_sensor:
+```yaml
+sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    vedirect_entities:
+      - type: DEVICE_STATE
+        name: 'Device state (raw)'
+```
+More: you can map the same register (`DEVICE_STATE`) to more than one entity so that you can see it in different representations (both as a sensor and a text_sensor). The component will dispatch the incoming raw data to all of the entities representing it.
+
+## Register definitions
+This table exposes the list of actually pre-defined registers to be used with the 'shortcut' configuration `type`. It is extracted from the source file definitions in [ve_reg_register.h](https://github.com/krahabb/esphome-victron-vedirect/blob/main/components/m3_vedirect/ve_reg_register.h) which is always the 'source of truth' for the component.
+TBD
+
+
+
 More help and wiki will come.
 
 Good interfacing!
