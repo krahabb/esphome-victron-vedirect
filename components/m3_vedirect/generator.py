@@ -5,6 +5,8 @@ import typing
 
 INDENT = "    "
 GENERATED_FILENAME = "ve_reg.py"
+README = "README.md"
+README_STUB = "README_.md"
 ve_reg_py: TextIOWrapper
 
 
@@ -128,6 +130,34 @@ def generate():
         )
 
     ve_reg_py.write("}\n")
+
+    # Generate the readme.md for the repo by filling in dynamic/generated data
+    with open(README_STUB, encoding="utf-8") as readme_stub:
+        readme = readme_stub.read()
+
+    reg_def_table = "".join(
+        (
+            "|type|class|r/w|hex address|flavor|\n",
+            "|---|---|---|---|---|\n",
+        )
+    )
+
+    for reg_def_type, reg_def in reg_defs.items():
+        reg_def_table += "".join(
+            (
+                f"|`{reg_def_type}`",  # type
+                f'|{reg_def[1].split("_")[0]}',  # class
+                f"|{reg_def[4]}",  # R/W
+                f"|{reg_def[2]}",  # address
+                f"|{reg_def[0]}",  # flavor
+                "|\n",
+            )
+        )
+
+    readme = readme.replace("{reg_def_table}", reg_def_table)
+
+    with open(README, mode="w", encoding="utf-8") as readme_file:
+        readme_file.write(readme)
 
 
 if __name__ == "__main__":
