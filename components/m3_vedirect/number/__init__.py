@@ -1,3 +1,4 @@
+import esphome.codegen as cg
 from esphome.components import number
 import esphome.config_validation as cv
 import esphome.const as ec
@@ -11,9 +12,9 @@ PLATFORM = VEDirectPlatform(
     (ve_reg.CLASS.NUMERIC,),
     False,
     {
-        cv.Required(ec.CONF_MIN_VALUE): cv.float_,
-        cv.Required(ec.CONF_MAX_VALUE): cv.float_,
-        cv.Required(ec.CONF_STEP): cv.positive_float,
+        cv.Optional(ec.CONF_MIN_VALUE): cv.float_,
+        cv.Optional(ec.CONF_MAX_VALUE): cv.float_,
+        cv.Optional(ec.CONF_STEP): cv.positive_float,
     },
 )
 
@@ -22,9 +23,9 @@ async def _register_number(var, config):
     await number.register_number(
         var,
         config,
-        min_value=config[ec.CONF_MIN_VALUE],
-        max_value=config[ec.CONF_MAX_VALUE],
-        step=config[ec.CONF_STEP],
+        min_value=config.get(ec.CONF_MIN_VALUE, cg.NAN),
+        max_value=config.get(ec.CONF_MAX_VALUE, cg.NAN),
+        step=config.get(ec.CONF_STEP, cg.NAN),
     )
 
 

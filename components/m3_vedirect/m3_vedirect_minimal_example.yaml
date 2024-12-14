@@ -4,6 +4,7 @@
 # no need to provide a definition for eache entity/value in this config file.
 
 external_components:
+  # source: github://krahabb/esphome # development repo
   source: github://krahabb/esphome-victron-vedirect
 
 uart:

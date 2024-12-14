@@ -7,6 +7,7 @@
 # Also, the ability to send HEX frames commands through an HA service is exposed.
 
 external_components:
+  # source: github://krahabb/esphome # development repo
   source: github://krahabb/esphome-victron-vedirect
 
 api:

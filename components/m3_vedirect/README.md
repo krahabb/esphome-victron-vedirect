@@ -30,6 +30,13 @@ There are some sample configurations with a basic explanation of the features fo
 
 These samples mostly use the 'auto create' feature in order to automatically create an entity for any register data appearing on the communication channel. This might help to start over but could soon become cumbersome since HEX broadcasted registers might be a lot and the component will create HA entities for any of these.
 
+These other samples show instead usage of static entities definition for different 'flavors'. See [manual configuration](#manual-configuration) for better insights.
+- [m3_vedirect_flavor_ALL_example.yaml](https://github.com/krahabb/esphome-victron-vedirect/blob/main/components/m3_vedirect/m3_vedirect_flavor_ALL_example.yaml)
+- [m3_vedirect_flavor_BMV_example.yaml](https://github.com/krahabb/esphome-victron-vedirect/blob/main/components/m3_vedirect/m3_vedirect_flavor_BMV_example.yaml)
+- [m3_vedirect_flavor_INV_example.yaml](https://github.com/krahabb/esphome-victron-vedirect/blob/main/components/m3_vedirect/m3_vedirect_flavor_INV_example.yaml)
+- [m3_vedirect_flavor_MPPT_example.yaml](https://github.com/krahabb/esphome-victron-vedirect/blob/main/components/m3_vedirect/m3_vedirect_flavor_MPPT_example.yaml)
+
+
 We'll see then how to better configure the device for only the needed entities.
 
 ### Manual configuration
@@ -93,58 +100,97 @@ More: you can map the same register (`DEVICE_STATE`) to more than one entity so 
 ## Register definitions
 This table exposes the list of actually pre-defined registers to be used with the 'shortcut' configuration `type`. It is extracted from the source file definitions in [ve_reg_register.h](https://github.com/krahabb/esphome-victron-vedirect/blob/main/components/m3_vedirect/ve_reg_register.h) which is always the 'source of truth' for the component.
 
+<!--BEGIN REG_DEF_TABLE-->
 |type|class|r/w|hex address|flavor|
 |---|---|---|---|---|
-|`BLE_MODE`|BITMASK|READ_WRITE|0x0090|ANY|
-|`PRODUCT_ID`|UNKNOWN|READ_ONLY|0x0100|ANY|
-|`APP_VER`|UNKNOWN|READ_ONLY|0x0102|ANY|
-|`SERIAL_NUMBER`|STRING|READ_ONLY|0x010A|ANY|
-|`MODEL_NAME`|STRING|READ_ONLY|0x010B|ANY|
-|`CAPABILITIES`|BITMASK|READ_ONLY|0x0140|ANY|
-|`CAPABILITIES_BLE`|BITMASK|READ_ONLY|0x0150|ANY|
-|`DEVICE_MODE`|ENUM|READ_WRITE|0x0200|ANY|
-|`DEVICE_STATE`|ENUM|READ_ONLY|0x0201|ANY|
-|`DEVICE_OFF_REASON`|BITMASK|READ_ONLY|0x0205|ANY|
-|`DEVICE_OFF_REASON_2`|BITMASK|READ_ONLY|0x0207|ANY|
-|`AC_OUT_VOLTAGE_SETPOINT`|NUMERIC|READ_WRITE|0x0230|INV|
-|`WARNING_REASON`|BITMASK|READ_ONLY|0x031C|ANY|
-|`ALARM_REASON`|BITMASK|READ_ONLY|0x031E|ANY|
-|`ALARM_LOW_VOLTAGE_SET`|NUMERIC|READ_WRITE|0x0320|INV|
-|`ALARM_LOW_VOLTAGE_CLEAR`|NUMERIC|READ_WRITE|0x0321|INV|
-|`RELAY_CONTROL`|BOOLEAN|READ_WRITE|0x034E|ANY|
-|`RELAY_MODE`|ENUM|READ_WRITE|0x034F|ANY|
-|`TTG`|NUMERIC|READ_ONLY|0x0FFE|BMV|
-|`SOC`|NUMERIC|READ_ONLY|0x0FFF|BMV|
-|`AC_OUT_VOLTAGE`|NUMERIC|READ_ONLY|0x2200|INV|
-|`AC_OUT_CURRENT`|NUMERIC|READ_ONLY|0x2201|INV|
-|`AC_OUT_APPARENT_POWER`|NUMERIC|READ_ONLY|0x2205|INV|
-|`SHUTDOWN_LOW_VOLTAGE_SET`|NUMERIC|READ_WRITE|0x2210|INV|
-|`VOLTAGE_RANGE_MIN`|NUMERIC|READ_ONLY|0x2211|INV|
-|`VOLTAGE_RANGE_MAX`|NUMERIC|READ_ONLY|0x2212|INV|
-|`DC_CHANNEL1_VOLTAGE`|NUMERIC|READ_ONLY|0xED8D|ANY|
-|`DC_CHANNEL1_POWER`|NUMERIC|READ_ONLY|0xED8E|BMV|
-|`DC_CHANNEL1_CURRENT`|NUMERIC|READ_ONLY|0xED8F|ANY|
-|`LOAD_OUTPUT_STATE`|BOOLEAN|READ_ONLY|0xEDA8|MPPT|
-|`LOAD_CURRENT`|NUMERIC|READ_ONLY|0xEDAD|MPPT|
-|`MPPT_TRACKER_MODE`|ENUM|READ_ONLY|0xEDB3|MPPT|
-|`PANEL_MAXIMUM_VOLTAGE`|NUMERIC|READ_ONLY|0xEDB8|MPPT|
-|`PANEL_VOLTAGE`|NUMERIC|READ_ONLY|0xEDBB|MPPT|
-|`PANEL_POWER`|NUMERIC|READ_ONLY|0xEDBC|MPPT|
-|`PANEL_CURRENT`|NUMERIC|READ_ONLY|0xEDBD|MPPT|
-|`MAXIMUM_POWER_YESTERDAY`|NUMERIC|READ_ONLY|0xEDD0|MPPT|
-|`YIELD_YESTERDAY`|NUMERIC|READ_ONLY|0xEDD1|MPPT|
-|`MAXIMUM_POWER_TODAY`|NUMERIC|READ_ONLY|0xEDD2|MPPT|
-|`YIELD_TODAY`|NUMERIC|READ_ONLY|0xEDD3|MPPT|
-|`CHARGER_VOLTAGE`|NUMERIC|READ_ONLY|0xEDD5|CHG|
-|`CHARGER_CURRENT`|NUMERIC|READ_ONLY|0xEDD7|CHG|
-|`CHR_ERROR_CODE`|ENUM|READ_ONLY|0xEDDA|CHG|
-|`USER_YIELD`|NUMERIC|READ_ONLY|0xEDDC|MPPT|
-|`SYSTEM_YIELD`|NUMERIC|READ_ONLY|0xEDDD|MPPT|
-|`BAT_TEMPERATURE`|NUMERIC|READ_ONLY|0xEDEC|ANY|
-|`DC_MONITOR_MODE`|NUMERIC|READ_ONLY|0xEEB8|BMV71|
-|`ALARM_BUZZER`|BOOLEAN|READ_WRITE|0xEEFC|BMV|
+|BLE_MODE|BITMASK|READ_WRITE|0x0090|ANY|
+|PRODUCT_ID|UNKNOWN|READ_ONLY|0x0100|ANY|
+|APP_VER|UNKNOWN|READ_ONLY|0x0102|ANY|
+|SERIAL_NUMBER|STRING|READ_ONLY|0x010A|ANY|
+|MODEL_NAME|STRING|READ_ONLY|0x010B|ANY|
+|CAPABILITIES|BITMASK|READ_ONLY|0x0140|ANY|
+|CAPABILITIES_BLE|BITMASK|READ_ONLY|0x0150|ANY|
+|DEVICE_MODE|ENUM|READ_WRITE|0x0200|ANY|
+|DEVICE_STATE|ENUM|READ_ONLY|0x0201|ANY|
+|DEVICE_OFF_REASON|BITMASK|READ_ONLY|0x0205|ANY|
+|DEVICE_OFF_REASON_2|BITMASK|READ_ONLY|0x0207|ANY|
+|AC_OUT_VOLTAGE_SETPOINT|NUMERIC|READ_WRITE|0x0230|INV|
+|WARNING_REASON|BITMASK|READ_ONLY|0x031C|ANY|
+|ALARM_REASON|BITMASK|READ_ONLY|0x031E|ANY|
+|ALARM_LOW_VOLTAGE_SET|NUMERIC|READ_WRITE|0x0320|INV|
+|ALARM_LOW_VOLTAGE_CLEAR|NUMERIC|READ_WRITE|0x0321|INV|
+|RELAY_CONTROL|BOOLEAN|READ_WRITE|0x034E|ANY|
+|RELAY_MODE|ENUM|READ_WRITE|0x034F|ANY|
+|TTG|NUMERIC|READ_ONLY|0x0FFE|BMV|
+|SOC|NUMERIC|READ_ONLY|0x0FFF|BMV|
+|AC_OUT_VOLTAGE|NUMERIC|READ_ONLY|0x2200|INV|
+|AC_OUT_CURRENT|NUMERIC|READ_ONLY|0x2201|INV|
+|AC_OUT_APPARENT_POWER|NUMERIC|READ_ONLY|0x2205|INV|
+|SHUTDOWN_LOW_VOLTAGE_SET|NUMERIC|READ_WRITE|0x2210|INV|
+|VOLTAGE_RANGE_MIN|NUMERIC|READ_ONLY|0x2211|INV|
+|VOLTAGE_RANGE_MAX|NUMERIC|READ_ONLY|0x2212|INV|
+|DC_CHANNEL1_VOLTAGE|NUMERIC|READ_ONLY|0xED8D|ANY|
+|DC_CHANNEL1_POWER|NUMERIC|READ_ONLY|0xED8E|BMV|
+|DC_CHANNEL1_CURRENT|NUMERIC|READ_ONLY|0xED8F|ANY|
+|LOAD_OUTPUT_STATE|BOOLEAN|READ_ONLY|0xEDA8|MPPT|
+|LOAD_CURRENT|NUMERIC|READ_ONLY|0xEDAD|MPPT|
+|MPPT_TRACKER_MODE|ENUM|READ_ONLY|0xEDB3|MPPT|
+|PANEL_MAXIMUM_VOLTAGE|NUMERIC|READ_ONLY|0xEDB8|MPPT|
+|PANEL_VOLTAGE|NUMERIC|READ_ONLY|0xEDBB|MPPT|
+|PANEL_POWER|NUMERIC|READ_ONLY|0xEDBC|MPPT|
+|PANEL_CURRENT|NUMERIC|READ_ONLY|0xEDBD|MPPT|
+|MAXIMUM_POWER_YESTERDAY|NUMERIC|READ_ONLY|0xEDD0|MPPT|
+|YIELD_YESTERDAY|NUMERIC|READ_ONLY|0xEDD1|MPPT|
+|MAXIMUM_POWER_TODAY|NUMERIC|READ_ONLY|0xEDD2|MPPT|
+|YIELD_TODAY|NUMERIC|READ_ONLY|0xEDD3|MPPT|
+|CHARGER_VOLTAGE|NUMERIC|READ_ONLY|0xEDD5|CHG|
+|CHARGER_CURRENT|NUMERIC|READ_ONLY|0xEDD7|CHG|
+|CHR_ERROR_CODE|ENUM|READ_ONLY|0xEDDA|CHG|
+|USER_YIELD|NUMERIC|READ_ONLY|0xEDDC|MPPT|
+|SYSTEM_YIELD|NUMERIC|READ_ONLY|0xEDDD|MPPT|
+|BAT_TEMPERATURE|NUMERIC|READ_ONLY|0xEDEC|ANY|
+|DC_MONITOR_MODE|NUMERIC|READ_ONLY|0xEEB8|BMV71|
+|ALARM_BUZZER|BOOLEAN|READ_WRITE|0xEEFC|BMV|
+<!--END REG_DEF_TABLE-->
 
 
+The 'flavor' property is used to conditionally include the corresponding definition(s) in the code. This works as an optimization for code size so that it is possible to decide which of the registers must be defined. It is controlled by the configuration key in the main platform configuration:
+```yaml
+m3_vedirect:
+  - id: vedirect_0
+    uart_id: uart_0
+    name: "Victron"
+    flavor: [ALL] # include all flavors i.e. all of the register definitions
+```
+If you want to use a particular register definition you have to ensure the corresponding `flavor` is set.
+
+The 'class' and 'r/w' properties are very important and state which kind of data the register is carrying and if it's read only or writable. Different 'classes' and 'r/w' can be supported by different EspHome entity types according to the following table:
+
+|class|r/w|primary entity|
+|---|---|---|
+|BITMASK|READ_ONLY|binary_sensor(1)|
+|BITMASK|READ_WRITE|switch(1)|
+|BOOLEAN|READ_ONLY|binary_sensor|
+|BOOLEAN|READ_WRITE|switch|
+|ENUM|READ_ONLY|text_sensor|
+|ENUM|READ_WRITE|select|
+|NUMERIC|READ_ONLY|sensor|
+|NUMERIC|READ_WRITE|number|
+|STRING|READ_ONLY|text_sensor|
+
+(1) in order to use a `binary_sensor` or `switch` for `BITMASK` registers you'd also have to set the configuration property `mask` which, as the name implies, is used to extract/mask the intended bit from the register value (representing a bitmask for the matter).
+```yaml
+binary_sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    vedirect_entities:
+      - type: DEVICE_OFF_REASON_2
+        name: 'No input power'
+        mask: 1 # Bit 0 of DEVICE_OFF_REASON bitmask
+```
+
+Beside these 'primary entity' mappings you can always use a `sensor` entity to represent the raw value as a numeric value even if the register is not marked as `NUMERIC` (though some sign conversion issues might happen since the conversion would be done as an unsigned type whenever the class is not `NUMERIC`). 
+Moreover, the `text_sensor` entity too can represent any class data type, generally falling back to report the hex register value 'as is' (if no better conversion is provided by the register definition).
 
 More help and wiki will come.
 

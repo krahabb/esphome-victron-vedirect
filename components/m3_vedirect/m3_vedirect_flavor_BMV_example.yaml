@@ -1,0 +1,87 @@
+# This file is used as a template for automatic generation of 'flavor' sample configurations.
+
+external_components:
+  # source: github://krahabb/esphome # development repo
+  source: github://krahabb/esphome-victron-vedirect
+
+uart:
+  - id: uart_0
+    tx_pin: GPIO4
+    rx_pin: GPIO5
+    baud_rate: 19200
+    rx_buffer_size: 256
+
+m3_vedirect:
+  - id: vedirect_0
+    uart_id: uart_0
+    name: "Victron"
+    flavor: [BMV]
+    textframe:
+      auto_create_entities: false
+    hexframe:
+      auto_create_entities: false
+      ping_timeout: 2min
+
+select:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    vedirect_entities:
+      - type: DEVICE_MODE
+        name: "DEVICE_MODE"
+      - type: RELAY_MODE
+        name: "RELAY_MODE"
+
+sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    vedirect_entities:
+      - type: TTG
+        name: "TTG"
+      - type: SOC
+        name: "SOC"
+      - type: DC_CHANNEL1_VOLTAGE
+        name: "DC_CHANNEL1_VOLTAGE"
+      - type: DC_CHANNEL1_POWER
+        name: "DC_CHANNEL1_POWER"
+      - type: DC_CHANNEL1_CURRENT
+        name: "DC_CHANNEL1_CURRENT"
+      - type: BAT_TEMPERATURE
+        name: "BAT_TEMPERATURE"
+
+switch:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    vedirect_entities:
+      - type: RELAY_CONTROL
+        name: "RELAY_CONTROL"
+      - type: ALARM_BUZZER
+        name: "ALARM_BUZZER"
+
+text_sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    vedirect_entities:
+      - type: BLE_MODE
+        name: "BLE_MODE"
+      - type: PRODUCT_ID
+        name: "PRODUCT_ID"
+      - type: APP_VER
+        name: "APP_VER"
+      - type: SERIAL_NUMBER
+        name: "SERIAL_NUMBER"
+      - type: MODEL_NAME
+        name: "MODEL_NAME"
+      - type: CAPABILITIES
+        name: "CAPABILITIES"
+      - type: CAPABILITIES_BLE
+        name: "CAPABILITIES_BLE"
+      - type: DEVICE_STATE
+        name: "DEVICE_STATE"
+      - type: DEVICE_OFF_REASON
+        name: "DEVICE_OFF_REASON"
+      - type: DEVICE_OFF_REASON_2
+        name: "DEVICE_OFF_REASON_2"
+      - type: WARNING_REASON
+        name: "WARNING_REASON"
+      - type: ALARM_REASON
+        name: "ALARM_REASON"
