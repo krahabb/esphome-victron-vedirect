@@ -336,24 +336,24 @@ Register *Manager::get_hex_register_(register_id_t register_id, bool create) {
       if (reg_def) {
         switch (reg_def->cls) {
           case REG_DEF::CLASS::NUMERIC:
-            if (reg_def->access == REG_DEF::ACCESS::READ_ONLY) {
-              hex_register = Register::BUILD_ENTITY_FUNC[Register::Sensor](this, reg_def->label, reg_def->label);
-            } else {
+            if (reg_def->access == REG_DEF::ACCESS::READ_WRITE) {
               hex_register = Register::BUILD_ENTITY_FUNC[Register::Number](this, reg_def->label, reg_def->label);
+            } else {
+              hex_register = Register::BUILD_ENTITY_FUNC[Register::Sensor](this, reg_def->label, reg_def->label);
             }
             break;
           case REG_DEF::CLASS::BOOLEAN:
-            if (reg_def->access == REG_DEF::ACCESS::READ_ONLY) {
-              hex_register = Register::BUILD_ENTITY_FUNC[Register::BinarySensor](this, reg_def->label, reg_def->label);
-            } else {
+            if (reg_def->access == REG_DEF::ACCESS::READ_WRITE) {
               hex_register = Register::BUILD_ENTITY_FUNC[Register::Switch](this, reg_def->label, reg_def->label);
+            } else {
+              hex_register = Register::BUILD_ENTITY_FUNC[Register::BinarySensor](this, reg_def->label, reg_def->label);
             }
             break;
           case REG_DEF::CLASS::ENUM:
-            if (reg_def->access == REG_DEF::ACCESS::READ_ONLY) {
-              hex_register = Register::BUILD_ENTITY_FUNC[Register::TextSensor](this, reg_def->label, reg_def->label);
-            } else {
+            if (reg_def->access == REG_DEF::ACCESS::READ_WRITE) {
               hex_register = Register::BUILD_ENTITY_FUNC[Register::Select](this, reg_def->label, reg_def->label);
+            } else {
+              hex_register = Register::BUILD_ENTITY_FUNC[Register::TextSensor](this, reg_def->label, reg_def->label);
             }
             break;
           case REG_DEF::CLASS::BITMASK: {

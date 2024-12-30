@@ -32,9 +32,9 @@ void Number::init_reg_def_() {
       this->traits.set_step(this->hex_scale_);
 #if defined(VEDIRECT_USE_HEXFRAME)
       switch (reg_def->unit) {
-        case REG_DEF::UNIT::CELSIUS:
+        case REG_DEF::UNIT::KELVIN:
           // special treatment for 'temperature' registers which are expected to carry un16 kelvin degrees
-          this->parse_hex_ = parse_hex_temperature_;
+          this->parse_hex_ = parse_hex_kelvin_;
           break;
         default:
           this->parse_hex_ = DATA_TYPE_TO_PARSE_HEX_FUNC_[reg_def->data_type];
@@ -96,21 +96,35 @@ void Number::parse_hex_default_(Register *hex_register, const RxHexFrame *hex_fr
   }
 }
 
-void Number::parse_hex_temperature_(Register *hex_register, const RxHexFrame *hex_frame) {
+void Number::parse_hex_kelvin_(Register *hex_register, const RxHexFrame *hex_frame) {
   Number *number = static_cast<Number *>(hex_register);
-  // hoping the operands are int-promoted and the result is an int
-  float value = (hex_frame->data_t<uint16_t>() - 27316) * number->hex_scale_;
-  if (number->state != value) {
-    number->publish_state(value);
+  uint16_t raw_value = hex_frame->data_t<uint16_t>();
+  if (raw_value == HEXFRAME::DATA_UNKNOWN<uint16_t>()) {
+    if (!std::isnan(number->state)) {
+      number->publish_state(NAN);
+    }
+  } else {
+    // hoping the operands are int-promoted and the result is an int
+    float value = (raw_value - 27316) * number->hex_scale_;
+    if (number->state != value) {
+      number->publish_state(value);
+    }
   }
 }
 
 template<typename T> void Number::parse_hex_t_(Register *hex_register, const RxHexFrame *hex_frame) {
   static_assert(RxHexFrame::ALLOCATED_DATA_SIZE >= 4, "HexFrame storage might lead to access overflow");
   Number *number = static_cast<Number *>(hex_register);
-  float value = hex_frame->data_t<T>() * number->hex_scale_;
-  if (number->state != value) {
-    number->publish_state(value);
+  T raw_value = hex_frame->data_t<T>();
+  if (raw_value == HEXFRAME::DATA_UNKNOWN<T>()) {
+    if (!std::isnan(number->state)) {
+      number->publish_state(NAN);
+    }
+  } else {
+    float value = raw_value * number->hex_scale_;
+    if (number->state != value) {
+      number->publish_state(value);
+    }
   }
 }
 

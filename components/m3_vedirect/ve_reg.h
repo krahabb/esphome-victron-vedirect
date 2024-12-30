@@ -40,6 +40,7 @@ struct HEXFRAME {
   };
   static const uint8_t DATA_TYPE_TO_SIZE[];
   template<typename T> static constexpr DATA_TYPE DATA_TYPE_OF();
+  template<typename T> static constexpr T DATA_UNKNOWN();
 
   COMMAND command;
   union {
@@ -76,5 +77,12 @@ template<> constexpr HEXFRAME::DATA_TYPE HEXFRAME::DATA_TYPE_OF<uint32_t>() { re
 template<> constexpr HEXFRAME::DATA_TYPE HEXFRAME::DATA_TYPE_OF<int8_t>() { return DATA_TYPE::SN8; }
 template<> constexpr HEXFRAME::DATA_TYPE HEXFRAME::DATA_TYPE_OF<int16_t>() { return DATA_TYPE::SN16; }
 template<> constexpr HEXFRAME::DATA_TYPE HEXFRAME::DATA_TYPE_OF<int32_t>() { return DATA_TYPE::SN32; }
+
+template<> constexpr uint8_t HEXFRAME::DATA_UNKNOWN<uint8_t>() { return 0xFFu; }
+template<> constexpr uint16_t HEXFRAME::DATA_UNKNOWN<uint16_t>() { return 0xFFFFu; }
+template<> constexpr uint32_t HEXFRAME::DATA_UNKNOWN<uint32_t>() { return 0xFFFFFFFFu; }
+template<> constexpr int8_t HEXFRAME::DATA_UNKNOWN<int8_t>() { return 0x7F; }
+template<> constexpr int16_t HEXFRAME::DATA_UNKNOWN<int16_t>() { return 0x7FFF; }
+template<> constexpr int32_t HEXFRAME::DATA_UNKNOWN<int32_t>() { return 0x7FFFFFFF; }
 
 }  // namespace m3_ve_reg

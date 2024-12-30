@@ -53,7 +53,8 @@ Register *Register::cascade_dispatcher_(Register *hex_register) {
 }
 
 const char *NumericRegister::UNIT_TO_DEVICE_CLASS[REG_DEF::UNIT::UNIT_COUNT] = {
-    nullptr, "current", "voltage", "apparent_power", "power", nullptr, "energy", "battery", "duration", "temperature",
+    nullptr, nullptr,  "current", "voltage",  "apparent_power", "power",
+    nullptr, "energy", "battery", "duration", "temperature",    "temperature",
 };
 
 }  // namespace m3_vedirect

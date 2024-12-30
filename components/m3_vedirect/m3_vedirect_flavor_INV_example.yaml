@@ -92,6 +92,8 @@ text_sensor:
         name: "CAPABILITIES_BLE"
       - type: DEVICE_STATE
         name: "DEVICE_STATE"
+      - type: INVERTER_DEVICE_STATE
+        name: "INVERTER_DEVICE_STATE"
       - type: DEVICE_OFF_REASON
         name: "DEVICE_OFF_REASON"
       - type: DEVICE_OFF_REASON_2

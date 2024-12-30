@@ -51,7 +51,7 @@ void TextSensor::init_reg_def_() {
       this->parse_hex_ = parse_hex_string_;
 #endif
       break;
-    case REG_DEF::CLASS::UNKNOWN:
+    case REG_DEF::CLASS::VOID:
       if (this->reg_def_->register_id == 0x0102) {
         // APP_VER (firmware version) register
 #if defined(VEDIRECT_USE_HEXFRAME)

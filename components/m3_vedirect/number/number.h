@@ -33,7 +33,7 @@ class Number final : public WritableRegister, public NumericRegister, public Reg
 
 #if defined(VEDIRECT_USE_HEXFRAME)
   static void parse_hex_default_(Register *hex_register, const RxHexFrame *hex_frame);
-  static void parse_hex_temperature_(Register *hex_register, const RxHexFrame *hex_frame);
+  static void parse_hex_kelvin_(Register *hex_register, const RxHexFrame *hex_frame);
   template<typename T> static void parse_hex_t_(Register *hex_register, const RxHexFrame *hex_frame);
   static const parse_hex_func_t DATA_TYPE_TO_PARSE_HEX_FUNC_[];
 #endif

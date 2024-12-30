@@ -26,6 +26,8 @@ binary_sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
+      - type: SOLAR_ACTIVITY
+        name: "SOLAR_ACTIVITY"
       - type: LOAD_OUTPUT_STATE
         name: "LOAD_OUTPUT_STATE"
 
@@ -42,6 +44,8 @@ sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
+      - type: TIME_OF_DAY
+        name: "TIME_OF_DAY"
       - type: DC_CHANNEL1_VOLTAGE
         name: "DC_CHANNEL1_VOLTAGE"
       - type: DC_CHANNEL1_CURRENT
@@ -68,6 +72,8 @@ sensor:
         name: "CHARGER_VOLTAGE"
       - type: CHARGER_CURRENT
         name: "CHARGER_CURRENT"
+      - type: CHR_INTERNAL_TEMPERATURE
+        name: "CHR_INTERNAL_TEMPERATURE"
       - type: USER_YIELD
         name: "USER_YIELD"
       - type: SYSTEM_YIELD
@@ -102,6 +108,8 @@ text_sensor:
         name: "CAPABILITIES_BLE"
       - type: DEVICE_STATE
         name: "DEVICE_STATE"
+      - type: CHARGER_DEVICE_STATE
+        name: "CHARGER_DEVICE_STATE"
       - type: DEVICE_OFF_REASON
         name: "DEVICE_OFF_REASON"
       - type: DEVICE_OFF_REASON_2

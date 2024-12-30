@@ -26,7 +26,7 @@
 
 #if 0
 // debug/testing preset environment: remove on release
-//#define VEDIRECT_FLAVOR_ALL
+#define VEDIRECT_FLAVOR_ALL
 //#define VEDIRECT_FLAVOR_MPPT_RS
 //#define VEDIRECT_FLAVOR_INV_PHNX
 //#define VEDIRECT_FLAVOR_BMV
@@ -34,6 +34,7 @@
 #endif
 
 #ifdef VEDIRECT_FLAVOR_ALL  // defines all flavors in one shot
+#define VEDIRECT_FLAVOR_MULTI_RS
 #define VEDIRECT_FLAVOR_MPPT_BS
 #define VEDIRECT_FLAVOR_MPPT_RS
 #define VEDIRECT_FLAVOR_INV_PHNX
@@ -47,6 +48,14 @@
 // or to a majority of different groups (so that they're likely in any device)
 // #define VEDIRECT_FLAVORS_ANY  // This is pretty useless and is just for symmetry with DEF_ANY_Y
 // #define DEF_ANY Y  // this must be fixed at Y in order to always activate features using the special flavor 'ANY'
+
+#ifdef VEDIRECT_FLAVOR_MULTI_RS  // Multi RS inverter
+#define VEDIRECT_FLAVOR_INV
+#define VEDIRECT_FLAVOR_MPPT_RS
+#define DEF_MULTI_RS Y
+#else
+#define DEF_MULTI_RS N
+#endif
 
 // Inverter flavors
 #ifdef VEDIRECT_FLAVOR_INV_PHNX  // Phoenix inverters

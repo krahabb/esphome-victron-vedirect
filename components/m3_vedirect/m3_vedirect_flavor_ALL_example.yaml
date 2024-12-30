@@ -26,6 +26,8 @@ binary_sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
+      - type: SOLAR_ACTIVITY
+        name: "SOLAR_ACTIVITY"
       - type: LOAD_OUTPUT_STATE
         name: "LOAD_OUTPUT_STATE"
 
@@ -55,10 +57,14 @@ sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
+      - type: MPPT_TRACKERS
+        name: "MPPT_TRACKERS"
       - type: TTG
         name: "TTG"
       - type: SOC
         name: "SOC"
+      - type: TIME_OF_DAY
+        name: "TIME_OF_DAY"
       - type: AC_OUT_VOLTAGE
         name: "AC_OUT_VOLTAGE"
       - type: AC_OUT_CURRENT
@@ -69,6 +75,32 @@ sensor:
         name: "VOLTAGE_RANGE_MIN"
       - type: VOLTAGE_RANGE_MAX
         name: "VOLTAGE_RANGE_MAX"
+      - type: PANEL_VOLTAGE_1
+        name: "PANEL_VOLTAGE_1"
+      - type: PANEL_POWER_1
+        name: "PANEL_POWER_1"
+      - type: PANEL_CURRENT_1
+        name: "PANEL_CURRENT_1"
+      - type: PANEL_VOLTAGE_2
+        name: "PANEL_VOLTAGE_2"
+      - type: PANEL_POWER_2
+        name: "PANEL_POWER_2"
+      - type: PANEL_CURRENT_2
+        name: "PANEL_CURRENT_2"
+      - type: PANEL_VOLTAGE_3
+        name: "PANEL_VOLTAGE_3"
+      - type: PANEL_POWER_3
+        name: "PANEL_POWER_3"
+      - type: PANEL_CURRENT_3
+        name: "PANEL_CURRENT_3"
+      - type: PANEL_VOLTAGE_4
+        name: "PANEL_VOLTAGE_4"
+      - type: PANEL_POWER_4
+        name: "PANEL_POWER_4"
+      - type: PANEL_CURRENT_4
+        name: "PANEL_CURRENT_4"
+      - type: BATTERY_RIPPLE_VOLTAGE
+        name: "BATTERY_RIPPLE_VOLTAGE"
       - type: DC_CHANNEL1_VOLTAGE
         name: "DC_CHANNEL1_VOLTAGE"
       - type: DC_CHANNEL1_POWER
@@ -85,6 +117,8 @@ sensor:
         name: "PANEL_POWER"
       - type: PANEL_CURRENT
         name: "PANEL_CURRENT"
+      - type: PANEL_MAXIMUM_CURRENT
+        name: "PANEL_MAXIMUM_CURRENT"
       - type: MAXIMUM_POWER_YESTERDAY
         name: "MAXIMUM_POWER_YESTERDAY"
       - type: YIELD_YESTERDAY
@@ -97,6 +131,8 @@ sensor:
         name: "CHARGER_VOLTAGE"
       - type: CHARGER_CURRENT
         name: "CHARGER_CURRENT"
+      - type: CHR_INTERNAL_TEMPERATURE
+        name: "CHR_INTERNAL_TEMPERATURE"
       - type: USER_YIELD
         name: "USER_YIELD"
       - type: SYSTEM_YIELD
@@ -135,6 +171,10 @@ text_sensor:
         name: "CAPABILITIES_BLE"
       - type: DEVICE_STATE
         name: "DEVICE_STATE"
+      - type: INVERTER_DEVICE_STATE
+        name: "INVERTER_DEVICE_STATE"
+      - type: CHARGER_DEVICE_STATE
+        name: "CHARGER_DEVICE_STATE"
       - type: DEVICE_OFF_REASON
         name: "DEVICE_OFF_REASON"
       - type: DEVICE_OFF_REASON_2
@@ -143,6 +183,14 @@ text_sensor:
         name: "WARNING_REASON"
       - type: ALARM_REASON
         name: "ALARM_REASON"
+      - type: MPPT_TRACKER_MODE_1
+        name: "MPPT_TRACKER_MODE_1"
+      - type: MPPT_TRACKER_MODE_2
+        name: "MPPT_TRACKER_MODE_2"
+      - type: MPPT_TRACKER_MODE_3
+        name: "MPPT_TRACKER_MODE_3"
+      - type: MPPT_TRACKER_MODE_4
+        name: "MPPT_TRACKER_MODE_4"
       - type: MPPT_TRACKER_MODE
         name: "MPPT_TRACKER_MODE"
       - type: CHR_ERROR_CODE

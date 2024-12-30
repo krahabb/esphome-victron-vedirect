@@ -66,11 +66,12 @@ struct BITMASK_DEF : public ENUM_DEF {
 };
 
 // declare the enum helpers structs for BITMASK/ENUM registers
-#define _DEF_ENUM_UNKNOWN N
+#define _DEF_ENUM_VOID N
 #define _DEF_ENUM_BOOLEAN N
 #define _DEF_ENUM_BITMASK Y
 #define _DEF_ENUM_BITMASK_S N
 #define _DEF_ENUM_ENUM Y
+#define _DEF_ENUM_ENUM_S N
 #define _DEF_ENUM_NUMERIC N
 #define _DEF_ENUM_STRING N
 #define _ENUMS_ITEM(enum, value) enum = value
@@ -92,7 +93,7 @@ struct REG_DEF {
 
   /// @brief Defines the data semantics of this register
   enum CLASS : uint8_t {
-    UNKNOWN,  // untyped data. Generally rendered by the 'default' handler (HEX for TextSensors)
+    VOID,     // untyped data. Generally rendered by the 'default' handler (HEX for TextSensors)
     BITMASK,  // represents a set of bit flags
     BOOLEAN,  // boolean state represented by 0 -> false, 1 -> true
     ENUM,     // enumeration data
@@ -101,15 +102,17 @@ struct REG_DEF {
   };
 
   enum ACCESS : uint8_t {
-    READ_ONLY = 0,
-    READ_WRITE = 1,
+    CONSTANT = 0,    // fixed read-only value
+    READ_ONLY = 1,   // measure
+    READ_WRITE = 2,  // configuration
   };
 
   typedef HEXFRAME::DATA_TYPE DATA_TYPE;
 
   // configuration symbols for numeric sensors
   enum UNIT : uint8_t {
-    NONE,
+    NONE,     // no unit - no state class
+    UNKNOWN,  // unknown unit - state class: measurement
     A,
     V,
     VA,
@@ -119,6 +122,7 @@ struct REG_DEF {
     SOC_PERCENTAGE,
     minute,
     CELSIUS,
+    KELVIN,
     UNIT_COUNT,
   };
   static const char *UNITS[UNIT::UNIT_COUNT];
@@ -138,9 +142,8 @@ struct REG_DEF {
   const register_id_t register_id;
   const char *const label;  // not relevant for manually built (in config.yaml) REG_DEF(s)
   CLASS cls : 3;
-  ACCESS access : 1;
+  ACCESS access : 2;
   DATA_TYPE data_type : 3;  // only relevant for BITMASK and NUMERIC (ENUM are UN8 though)
-  uint8_t _padding : 1;
   union {
     struct {
       ENUM_DEF *enum_def;
@@ -160,11 +163,11 @@ struct REG_DEF {
   REG_DEF(register_id_t register_id)
       : register_id(register_id),
         label(nullptr),
-        cls(CLASS::UNKNOWN),
+        cls(CLASS::VOID),
         access(ACCESS::READ_ONLY),
         data_type(DATA_TYPE::VARIADIC),
         enum_def(nullptr) {}
-  /// @brief Constructor for UNKNOWN, BOOLEAN, or STRING register definitions
+  /// @brief Constructor for VOID, BOOLEAN, or STRING register definitions
   REG_DEF(register_id_t register_id, const char *label, CLASS cls, ACCESS access)
       : register_id(register_id),
         label(label),
