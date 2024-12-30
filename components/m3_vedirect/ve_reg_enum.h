@@ -3,76 +3,76 @@
 // clang-format off
 
 #define BITMASK_BLE_MODE(ENUM) \
-  ENUM(ENABLED, 0x00),
+  ENUM(enabled, 0x00),
 
 #define BITMASK_CAPABILITIES(ENUM) \
-  ENUM(LOAD_OUTPUT, 0), \
-  ENUM(ROTARY_ENCODER, 1), \
-  ENUM(HISTORY, 2), \
-  ENUM(BATTERYSAFE, 3), \
-  ENUM(ADAPTIVE, 4), \
-  ENUM(MANUAL_EQUALISE, 5), \
-  ENUM(AUTOMATIC_EQUALISE, 6), \
-  ENUM(STORAGE, 7), \
-  ENUM(REMOTE_ON_OFF, 8), \
-  ENUM(SYNCHRONIZED_CHARGING, 16), \
-  ENUM(RELAY, 17), \
-  ENUM(PAYGO, 27), \
-  ENUM(HYBERNATE, 28), \
+  ENUM(load_output, 0), \
+  ENUM(rotary_encoder, 1), \
+  ENUM(history, 2), \
+  ENUM(batterysafe, 3), \
+  ENUM(adaptive, 4), \
+  ENUM(manual_equalise, 5), \
+  ENUM(automatic_equalise, 6), \
+  ENUM(storage, 7), \
+  ENUM(remote_on_off, 8), \
+  ENUM(synchronized_charging, 16), \
+  ENUM(relay, 17), \
+  ENUM(paygo, 27), \
+  ENUM(hybernate, 28),
 
 #define BITMASK_CAPABILITIES_BLE(ENUM) \
-  ENUM(BLE_MODE, 0), ENUM(PERMANENT_OFF, 1),
+  ENUM(ble_mode, 0), ENUM(permanent_off, 1),
 
 #define ENUM_CHR_ERROR_CODE(ENUM) \
-  ENUM(NO_ERROR, 0), ENUM(BATTERY_TEMPERATURE_HIGH, 1), ENUM(BATTERY_VOLTAGE_HIGH, 2), ENUM(REMOTE_TEMPERATURE_A, 3), \
-  ENUM(REMOTE_TEMPERATURE_B, 4), ENUM(REMOTE_TEMPERATURE_C, 5), ENUM(REMOTE_VOLTAGE_A, 6), \
-  ENUM(REMOTE_VOLTAGE_B, 7), ENUM(REMOTE_VOLTAGE_C, 8), ENUM(HIGH_RIPPLE, 11), ENUM(BATTERY_TEMPERATURE_LOW, 14), \
-  ENUM(CHARGER_TEMPERATURE_HIGH, 17), ENUM(OVER_CURRENT, 18), ENUM(BULK_TIME, 20), ENUM(CURRENT_SENSOR, 21), \
-  ENUM(INTERNAL_TEMPERATURE_A, 22), ENUM(INTERNAL_TEMPERATURE_B, 23), ENUM(FAN, 24), ENUM(OVERHEATED, 26), \
-  ENUM(SHORT_CIRCUIT, 27), ENUM(CONVERTER_ISSUE, 28), ENUM(OVER_CHARGE, 29), ENUM(INPUT_VOLTAGE, 33), \
-  ENUM(INPUT_CURRENT, 34), ENUM(INPUT_POWER, 35), ENUM(INPUT_SHUTDOWN_VOLTAGE, 38), \
-  ENUM(INPUT_SHUTDOWN_CURRENT, 39), ENUM(INPUT_SHUTDOWN_FAILURE, 40), ENUM(INVERTER_SHUTDOWN_41, 41), \
-  ENUM(INVERTER_SHUTDOWN_42, 42), ENUM(INVERTER_SHUTDOWN_43, 43), ENUM(INVERTER_OVERLOAD, 50), \
-  ENUM(INVERTER_TEMPERATURE, 51), ENUM(INVERTER_PEAK_CURRENT, 52), ENUM(INVERTER_OUPUT_VOLTAGE_A, 53), \
-  ENUM(INVERTER_OUPUT_VOLTAGE_B, 54), ENUM(INVERTER_SELF_TEST_A, 55), ENUM(INVERTER_SELF_TEST_B, 56), \
-  ENUM(INVERTER_AC, 57), ENUM(INVERTER_SELF_TEST_C, 58), ENUM(COMMUNICATION, 65), ENUM(SYNCHRONISATION, 66), \
-  ENUM(BMS, 67), ENUM(NETWORK_A, 68), ENUM(NETWORK_B, 69), ENUM(NETWORK_C, 70), ENUM(NETWORK_D, 71), \
-  ENUM(PV_INPUT_SHUTDOWN_80, 80), ENUM(PV_INPUT_SHUTDOWN_81, 81), ENUM(PV_INPUT_SHUTDOWN_82, 82), \
-  ENUM(PV_INPUT_SHUTDOWN_83, 83), ENUM(PV_INPUT_SHUTDOWN_84, 84), ENUM(PV_INPUT_SHUTDOWN_85, 85), \
-  ENUM(PV_INPUT_SHUTDOWN_86, 86), ENUM(PV_INPUT_SHUTDOWN_87, 87), ENUM(CPU_TEMPERATURE_HIGH, 114), \
-  ENUM(CALIBRATION_LOST, 116), ENUM(INVALID_FIRMWARE, 117), ENUM(SETTINGS_LOST, 119), ENUM(TESTER_FAIL, 121), \
-  ENUM(INTERNAL_DC_VOLTAGE_A, 200), ENUM(INTERNAL_DC_VOLTAGE_B, 201), ENUM(SELF_TEST, 202), \
-  ENUM(INTERNAL_SUPPLY_VOLTAGE_A, 203), ENUM(INTERNAL_SUPPLY_VOLTAGE_B, 205), \
-  ENUM(INTERNAL_SUPPLY_VOLTAGE_C, 212), ENUM(INTERNAL_SUPPLY_VOLTAGE_D, 215), ENUM(UNKNOWN, 0xFF)
+  ENUM(no_error, 0), ENUM(battery_temperature_high, 1), ENUM(battery_voltage_high, 2), ENUM(remote_temperature_a, 3), \
+  ENUM(remote_temperature_b, 4), ENUM(remote_temperature_c, 5), ENUM(remote_voltage_a, 6), \
+  ENUM(remote_voltage_b, 7), ENUM(remote_voltage_c, 8), ENUM(high_ripple, 11), ENUM(battery_temperature_low, 14), \
+  ENUM(charger_temperature_high, 17), ENUM(over_current, 18), ENUM(bulk_time, 20), ENUM(current_sensor, 21), \
+  ENUM(internal_temperature_a, 22), ENUM(internal_temperature_b, 23), ENUM(fan, 24), ENUM(overheated, 26), \
+  ENUM(short_circuit, 27), ENUM(converter_issue, 28), ENUM(over_charge, 29), ENUM(input_voltage, 33), \
+  ENUM(input_current, 34), ENUM(input_power, 35), ENUM(input_shutdown_voltage, 38), \
+  ENUM(input_shutdown_current, 39), ENUM(input_shutdown_failure, 40), ENUM(inverter_shutdown_41, 41), \
+  ENUM(inverter_shutdown_42, 42), ENUM(inverter_shutdown_43, 43), ENUM(inverter_overload, 50), \
+  ENUM(inverter_temperature, 51), ENUM(inverter_peak_current, 52), ENUM(inverter_ouput_voltage_a, 53), \
+  ENUM(inverter_ouput_voltage_b, 54), ENUM(inverter_self_test_a, 55), ENUM(inverter_self_test_b, 56), \
+  ENUM(inverter_ac, 57), ENUM(inverter_self_test_c, 58), ENUM(communication, 65), ENUM(synchronisation, 66), \
+  ENUM(bms, 67), ENUM(network_a, 68), ENUM(network_b, 69), ENUM(network_c, 70), ENUM(network_d, 71), \
+  ENUM(pv_input_shutdown_80, 80), ENUM(pv_input_shutdown_81, 81), ENUM(pv_input_shutdown_82, 82), \
+  ENUM(pv_input_shutdown_83, 83), ENUM(pv_input_shutdown_84, 84), ENUM(pv_input_shutdown_85, 85), \
+  ENUM(pv_input_shutdown_86, 86), ENUM(pv_input_shutdown_87, 87), ENUM(cpu_temperature_high, 114), \
+  ENUM(calibration_lost, 116), ENUM(invalid_firmware, 117), ENUM(settings_lost, 119), ENUM(tester_fail, 121), \
+  ENUM(internal_dc_voltage_a, 200), ENUM(internal_dc_voltage_b, 201), ENUM(self_test, 202), \
+  ENUM(internal_supply_voltage_a, 203), ENUM(internal_supply_voltage_b, 205), \
+  ENUM(internal_supply_voltage_c, 212), ENUM(internal_supply_voltage_d, 215), ENUM(unknown, 0xFF)
 
 #define ENUM_DEVICE_MODE(ENUM) \
-  ENUM(OFF, 0x00), ENUM(CHARGER_ON, 0x01), ENUM(INVERTER_ON, 0x02), ENUM(DEVICE_ON, 0x03), \
-  ENUM(DEVICE_OFF, 0x04), ENUM(ECO, 0x05), ENUM(HIBERNATE, 0xFD),
+  ENUM(off, 0x00), ENUM(charger_on, 0x01), ENUM(inverter_on, 0x02), ENUM(device_on, 0x03), \
+  ENUM(device_off, 0x04), ENUM(eco, 0x05), ENUM(hibernate, 0xFD),
 
 #define BITMASK_DEVICE_OFF_REASON_2(ENUM) \
-  ENUM(NO_INPUT_POWER, 0x00), ENUM(PHYSICAL_POWER_SWITCH, 0x01), ENUM(SOFT_POWER_SWITCH, 0x02), \
-  ENUM(REMOTE_INPUT, 0x03), ENUM(INTERNAL_ALARM, 0x04), ENUM(PAYGO, 0x05), ENUM(BMS_SHUTDOWN, 0x06), \
-  ENUM(ENGINE, 0x07), ENUM(INPUT_VOLTAGE, 0x08), ENUM(BATTERY_TEMPERATURE, 0x09), 
+  ENUM(no_input_power, 0x00), ENUM(physical_power_switch, 0x01), ENUM(soft_power_switch, 0x02), \
+  ENUM(remote_input, 0x03), ENUM(internal_alarm, 0x04), ENUM(paygo, 0x05), ENUM(bms_shutdown, 0x06), \
+  ENUM(engine, 0x07), ENUM(input_voltage, 0x08), ENUM(battery_temperature, 0x09),
 
 #define ENUM_DEVICE_STATE(ENUM) \
-  ENUM(OFF, 0x00), ENUM(LOW_POWER, 0x01), ENUM(FAULT, 0x02), ENUM(BULK, 0x03), ENUM(ABSORPTION, 0x04), \
-  ENUM(FLOAT, 0x05), ENUM(STORAGE, 0x06), ENUM(EQUALIZE_MANUAL, 0x07), ENUM(PASSTHRU, 0x08), \
-  ENUM(INVERTING, 0x09), ENUM(ASSISTING, 0x0A), ENUM(POWER_SUPPLY, 0x0B), ENUM(SUSTAIN, 0xF4), \
-  ENUM(STARTING_UP, 0xF5), ENUM(REPEATED_ABSORPTION, 0xF6), ENUM(AUTO_EQUALIZE, 0xF7), \
-  ENUM(BATTERY_SAFE, 0xF8), ENUM(EXTERNAL_CONTROL, 0xFC), ENUM(UNKNOWN, 0xFF),
+  ENUM(off, 0x00), ENUM(low_power, 0x01), ENUM(fault, 0x02), ENUM(bulk, 0x03), ENUM(absorption, 0x04), \
+  ENUM(floating, 0x05), ENUM(storage, 0x06), ENUM(equalize_manual, 0x07), ENUM(passthru, 0x08), \
+  ENUM(inverting, 0x09), ENUM(assisting, 0x0A), ENUM(power_supply, 0x0B), ENUM(sustain, 0xF4), \
+  ENUM(starting_up, 0xF5), ENUM(repeated_absorption, 0xF6), ENUM(auto_equalize, 0xF7), \
+  ENUM(battery_safe, 0xF8), ENUM(external_control, 0xFC), ENUM(unknown, 0xFF),
 
 #define ENUM_MPPT_TRACKER_MODE(ENUM) \
-  ENUM(OFF, 0x00), ENUM(V_I_LIMITED, 0x01), ENUM(MPPT, 0x02),
+  ENUM(off, 0x00), ENUM(v_i_limited, 0x01), ENUM(mppt, 0x02),
 
 #define ENUM_RELAY_MODE(ENUM) \
-  ENUM(WARNINGS, 0), ENUM(REMOTE, 2), ENUM(DISABLED, 3), ENUM(NORMAL, 4), ENUM(BATTERY_LOW, 5), \
-  ENUM(FAN, 6),
+  ENUM(warnings, 0), ENUM(remote, 2), ENUM(disabled, 3), ENUM(normal, 4), ENUM(battery_low, 5), \
+  ENUM(fan, 6),
 
 #define BITMASK_WARNING_REASON(ENUM) \
-  ENUM(LOW_BATTERY_VOLTAGE, 0x00), ENUM(HIGH_BATTERY_VOLTAGE, 0x01), ENUM(LOW_SOC, 0x02), \
-  ENUM(LOW_STARTER_VOLTAGE, 0x03), ENUM(HIGH_STARTER_VOLTAGE, 0x04), ENUM(LOW_TEMPERATURE, 0x05), \
-  ENUM(HIGH_TEMPERATURE, 0x06), ENUM(MID_BATTERY_VOLTAGE, 0x07), ENUM(OVERLOAD, 0x08), \
-  ENUM(DC_RIPPLE, 0x09), ENUM(LOW_AC_OUT_VOLTAGE, 0x0A), ENUM(HIGH_AC_OUT_VOLTAGE, 0x0B), \
-  ENUM(SHORT_CIRCUIT, 0x0C), ENUM(BMS_LOCKOUT, 0x0D),
+  ENUM(low_battery_voltage, 0x00), ENUM(high_battery_voltage, 0x01), ENUM(low_soc, 0x02), \
+  ENUM(low_starter_voltage, 0x03), ENUM(high_starter_voltage, 0x04), ENUM(low_temperature, 0x05), \
+  ENUM(high_temperature, 0x06), ENUM(mid_battery_voltage, 0x07), ENUM(overload, 0x08), \
+  ENUM(dc_ripple, 0x09), ENUM(low_ac_out_voltage, 0x0A), ENUM(high_ac_out_voltage, 0x0B), \
+  ENUM(short_circuit, 0x0C), ENUM(bms_lockout, 0x0D),
 
 // clang-format on
