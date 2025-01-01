@@ -49,23 +49,25 @@ def validate_str_enum(enum_class: type[enum.StrEnum]):
     return cv.enum({_enum.name: _enum for _enum in enum_class})
 
 
-_NUMERIC_SCALE_MAP = {
-    1: ve_reg.SCALE.S_1,
-    0.1: ve_reg.SCALE.S_0_1,
-    0.01: ve_reg.SCALE.S_0_01,
-    0.001: ve_reg.SCALE.S_0_001,
-    0.25: ve_reg.SCALE.S_0_25,
-}
-
-_numeric_scale_enum_validator = validate_mock_enum(ve_reg.SCALE)
-
-
-def validate_numeric_scale(value):
+def validate_numeric_scale():
     """Allows 'scale' to be set either as a typed enum from REG_DEF::SCALE or a float value.
     float value must be one of the normalized."""
-    if value in _NUMERIC_SCALE_MAP:
-        value = _NUMERIC_SCALE_MAP[value].name
-    return _numeric_scale_enum_validator(value)
+
+    def _convert_to_float(scale: ve_reg.SCALE):
+        return float(scale.name[2:].replace("_", "."))
+
+    return cv.enum(
+        {
+            _convert_to_float(scale): scale.enum
+            for scale in ve_reg.SCALE
+            if scale != ve_reg.SCALE.SCALE_COUNT
+        }
+        | {
+            scale.name: scale.enum
+            for scale in ve_reg.SCALE
+            if scale != ve_reg.SCALE.SCALE_COUNT
+        }
+    )
 
 
 def validate_enum_lookup_def(value):
@@ -91,7 +93,9 @@ VEDIRECT_REGISTER_SCHEMA = {
     # binds to the corresponding HEX register
     cv.Optional(CONF_ADDRESS, default=0): validate_register_id(),
     # configures the format of the HEX register
-    cv.Optional(CONF_DATA_TYPE): validate_mock_enum(ve_reg.DATA_TYPE),
+    cv.Optional(
+        CONF_DATA_TYPE, default=ve_reg.DATA_TYPE.VARIADIC.name
+    ): validate_mock_enum(ve_reg.DATA_TYPE),
 }
 CONF_TEXT_SCALE = "text_scale"
 CONF_SCALE = "scale"
@@ -102,9 +106,11 @@ VEDIRECT_REGISTER_CLASS_SCHEMAS = {
     ve_reg.CLASS.ENUM: cv.ensure_list(validate_enum_lookup_def),
     ve_reg.CLASS.NUMERIC: cv.Schema(
         {
-            cv.Optional(CONF_SCALE): validate_numeric_scale,
-            cv.Optional(CONF_TEXT_SCALE): validate_numeric_scale,
-            cv.Optional(CONF_UNIT): validate_mock_enum(ve_reg.UNIT),
+            cv.Optional(CONF_SCALE, default=1): validate_numeric_scale(),
+            cv.Optional(CONF_TEXT_SCALE): validate_numeric_scale(),
+            cv.Optional(CONF_UNIT, default=ve_reg.UNIT.NONE): validate_mock_enum(
+                ve_reg.UNIT
+            ),
         }
     ),
     ve_reg.CLASS.STRING: cv.Schema({}),
@@ -123,9 +129,9 @@ VEDIRECT_BINARY_ENTITY_BASE_SCHEMA = {
 }
 
 
-def local_object_construct(id_: cpp.ID, *args):
+def global_object_construct(id_: cpp.ID, *args):
     obj = cpp.MockObj(id_, ".")
-    cg.add(cpp.RawStatement(f"{id_.type} {id_}({cpp.ExpressionList(*args)});"))
+    cg.add_global(cpp.RawStatement(f"{id_.type} {id_}({cpp.ExpressionList(*args)});"))
     return obj
 
 
@@ -288,39 +294,49 @@ class VEDirectPlatform:
             register_id = register_config[CONF_ADDRESS]
             if register_id:
                 define_use_hexframe()
-            reg_def = local_object_construct(
-                register_config[CONF_REG_DEF_ID], register_id
-            )
             for _cls in ve_reg.CLASS:
                 _cls_key = _cls.name.lower()
                 if _cls_key in register_config:
                     class_config = register_config[_cls_key]
-                    local_assignment(reg_def.cls, _cls.enum)
                     match _cls:
                         case ve_reg.CLASS.BITMASK | ve_reg.CLASS.ENUM:
-                            enum_def = local_object_construct(
+                            enum_def = global_object_construct(
                                 register_config[CONF_ENUM_DEF_ID],
                                 class_config,
                             )
-                            local_assignment(
-                                reg_def.enum_def, cpp.UnaryOpExpression("&", enum_def)
+                            reg_def = global_object_construct(
+                                register_config[CONF_REG_DEF_ID],
+                                register_id,
+                                register_config[CONF_DATA_TYPE],
+                                _cls.enum,
+                                cpp.UnaryOpExpression("&", enum_def),
                             )
+
                         case ve_reg.CLASS.NUMERIC:
-                            if CONF_UNIT in class_config:
-                                local_assignment(reg_def.unit, class_config[CONF_UNIT])
-                            if CONF_SCALE in class_config:
-                                local_assignment(
-                                    reg_def.scale, class_config[CONF_SCALE]
-                                )
-                            if CONF_TEXT_SCALE in class_config:
-                                local_assignment(
-                                    reg_def.scale, class_config[CONF_TEXT_SCALE]
-                                )
-
+                            scale = class_config[CONF_SCALE]
+                            reg_def = global_object_construct(
+                                register_config[CONF_REG_DEF_ID],
+                                register_id,
+                                register_config[CONF_DATA_TYPE],
+                                class_config[CONF_UNIT],
+                                scale,
+                                class_config.get(CONF_TEXT_SCALE, scale),
+                            )
+                        case _:
+                            reg_def = global_object_construct(
+                                register_config[CONF_REG_DEF_ID],
+                                register_id,
+                                register_config[CONF_DATA_TYPE],
+                                _cls.enum,
+                            )
                     break
-
-            if CONF_DATA_TYPE in register_config:
-                local_assignment(reg_def.data_type, register_config[CONF_DATA_TYPE])
+            else:
+                reg_def = global_object_construct(
+                    register_config[CONF_REG_DEF_ID],
+                    register_id,
+                    register_config[CONF_DATA_TYPE],
+                    ve_reg.CLASS.VOID.enum,
+                )
 
             cg.add(manager.init_register(entity, cpp.UnaryOpExpression("&", reg_def)))
 

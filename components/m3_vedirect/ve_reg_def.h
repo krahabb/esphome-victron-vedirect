@@ -160,13 +160,32 @@ struct REG_DEF {
   static const REG_DEF *find_register_id(register_id_t register_id);
   static const REG_DEF *find_type(TYPE type) { return (type < ARRAY_COUNT(DEFS)) ? DEFS + type : nullptr; }
 
-  REG_DEF(register_id_t register_id)
+  // These constructors are general purpose and can be used in any context. Specifically they're used mostly in
+  // EspHome code generation
+
+  /// @brief Acting as a versatile default constructor
+  REG_DEF(register_id_t register_id = REGISTER_UNDEFINED, DATA_TYPE data_type = DATA_TYPE::VARIADIC,
+          CLASS cls = CLASS::VOID, ENUM_DEF *enum_def = nullptr)
       : register_id(register_id),
         label(nullptr),
-        cls(CLASS::VOID),
-        access(ACCESS::READ_ONLY),
-        data_type(DATA_TYPE::VARIADIC),
-        enum_def(nullptr) {}
+        cls(cls),
+        access(ACCESS::CONSTANT),
+        data_type(data_type),
+        enum_def(enum_def) {}
+
+  /// @brief Constructor for NUMERIC register definitions
+  REG_DEF(register_id_t register_id, DATA_TYPE data_type, UNIT unit, SCALE scale, SCALE text_scale)
+      : register_id(register_id),
+        label(nullptr),
+        cls(CLASS::NUMERIC),
+        access(ACCESS::CONSTANT),
+        data_type(data_type),
+        unit(unit),
+        scale(scale),
+        text_scale(text_scale) {}
+
+  // These other constructors are suited for usage in REGISTERS_COMMON(DEFINE_REG_DEF)
+
   /// @brief Constructor for VOID, BOOLEAN, or STRING register definitions
   REG_DEF(register_id_t register_id, const char *label, CLASS cls, ACCESS access)
       : register_id(register_id),
