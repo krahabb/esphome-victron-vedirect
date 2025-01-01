@@ -20,7 +20,7 @@ const ENUM_DEF::LOOKUP_DEF *ENUM_DEF::lookup_value(const char *label) {
 ENUM_DEF::LOOKUP_RESULT ENUM_DEF::get_lookup(enum_t value) {
   LOOKUP_RESULT result;
   auto lookup_def_it = std::lower_bound(this->LOOKUPS.begin(), this->LOOKUPS.end(), value);
-  result.index = lookup_def_it - this->LOOKUPS.begin();
+  result.index = std::distance(this->LOOKUPS.begin(), lookup_def_it);
   if ((lookup_def_it == this->LOOKUPS.end()) || (lookup_def_it->value != value)) {
     char *label = new char[5];
     sprintf(label, "0x%02X", (int) value);

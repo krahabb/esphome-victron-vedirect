@@ -130,16 +130,12 @@ void Select::publish_enum_(ENUM_DEF::enum_t enum_value) {
   // it would be nice to have a data provider interface though but
   // this is it and we'd rather not patch the official esphome core.
   // Here we'll try to mantain sync between our enum_def and the select::options array
-  // This code is safe as far as the enum_def->LOOKUPS is not modified by other parts
-  // of the code
   auto &options = this->traits_().options();
   auto enum_def = this->reg_def_->enum_def;
   auto lookup_result = enum_def->get_lookup(enum_value);
-  if (lookup_result.added) {
-    options.insert(options.begin() + lookup_result.index, std::string(lookup_result.lookup_def->label));
-  }
-  // Better safe than sorry..
   if (options.size() != enum_def->LOOKUPS.size()) {
+    ESP_LOGD(TAG, "'%s': Rebuilding options (prev size %zu, new size %zu)", this->get_name().c_str(), options.size(),
+             enum_def->LOOKUPS.size());
     options.clear();
     for (auto &lookup_def : enum_def->LOOKUPS) {
       options.push_back(std::string(lookup_def.label));
