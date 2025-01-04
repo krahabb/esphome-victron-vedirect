@@ -11,6 +11,9 @@ using namespace ::m3_ve_reg;
 class Manager;
 class Register;
 
+// default 'PING' HEX command timeout (millis)
+#define VEDIRECT_PING_TIMEOUT_MILLIS 60000
+
 // maximum amount of time (millis) without receiving data
 // after which we consider the vedirect link disconnected
 #define VEDIRECT_LINK_TIMEOUT_MILLIS 5000
@@ -18,6 +21,9 @@ class Register;
 // maximum amount of time (millis) without receiving a SET command
 // reply after which we consider the command unsuccesful
 #define VEDIRECT_COMMAND_TIMEOUT_MILLIS 1000
+
+// number of registers to poll in a single batch
+#define VEDIRECT_POLLING_BATCH_COUNT 10
 
 // Helpers for unordered_map with const char* key
 #if __cpp_constexpr >= 201304L

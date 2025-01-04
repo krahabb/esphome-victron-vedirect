@@ -30,6 +30,9 @@ void Manager::setup() {
   char *buf = new char[sizeof(TAG) + strlen(this->vedirect_id_)];
   sprintf(buf, TAG, this->vedirect_id_);
   this->logtag_ = buf;
+#if defined(VEDIRECT_USE_HEXFRAME)
+  this->millis_last_ping_tx_ = -this->ping_timeout_;
+#endif
   Manager::managers_.push_back(this);
 }
 
@@ -47,18 +50,18 @@ void Manager::loop() {
     uint8_t frame_buf[256];
     if (available > sizeof(frame_buf))
       available = sizeof(frame_buf);
-    if (this->read_array(frame_buf, available)) {
-      this->millis_last_rx_ = millis_;
-      this->decode(frame_buf, frame_buf + available);
-    }
+    this->read_array(frame_buf, available);
+    this->millis_last_rx_ = millis_;
+    this->decode(frame_buf, frame_buf + available);
+
 #if defined(VEDIRECT_USE_HEXFRAME)
     if (this->ping_timeout_ && ((millis_ - this->millis_last_ping_tx_) > this->ping_timeout_)) {
       this->send_hexframe(HexFrame_Command(HEXFRAME::COMMAND::Ping));
-      this->millis_last_ping_tx_ = this->millis_last_hexframe_tx_;
+      this->millis_last_ping_tx_ = millis_;
     }
 #endif
   } else {
-    if (this->connected_ && ((millis_ - this->millis_last_rx_) > VEDIRECT_LINK_TIMEOUT_MILLIS)) {
+    if (this->connected_ && ((millis_ - this->millis_last_frame_rx_) > VEDIRECT_LINK_TIMEOUT_MILLIS)) {
       this->on_disconnected_();
     }
   }
@@ -91,7 +94,6 @@ void Manager::init_register(Register *entity, REG_DEF::TYPE register_type) {
 #if defined(VEDIRECT_USE_HEXFRAME)
 void Manager::send_hexframe(const HexFrame &hexframe) {
   this->write_array((const uint8_t *) hexframe.encoded(), hexframe.encoded_size());
-  this->millis_last_hexframe_tx_ = millis();
   ESP_LOGD(this->logtag_, "HEX FRAME: sent %s", hexframe.encoded());
 }
 
@@ -104,8 +106,9 @@ void Manager::send_hexframe(const char *rawframe, bool addchecksum) {
   }
 }
 
-void Manager::request_set(register_id_t register_id, const void *data, HEXFRAME::DATA_TYPE data_type,
-                          request_callback_t callback, request_callback_param_t callback_param) {
+void Manager::request(HEXFRAME::COMMAND command, register_id_t register_id, const void *data,
+                      HEXFRAME::DATA_TYPE data_type, request_callback_t callback,
+                      request_callback_param_t callback_param) {
   // Request(s) in our storage are re-used as far as they're expired (millis == 0)
   Request *request = nullptr;
   for (auto it : this->requests_) {
@@ -124,7 +127,7 @@ void Manager::request_set(register_id_t register_id, const void *data, HEXFRAME:
 
 _setup_request:
   request->millis = millis();
-  request->hex_frame.command_set(register_id, data, data_type);
+  request->hex_frame.command(command, register_id, data, HEXFRAME::DATA_TYPE_TO_SIZE[data_type]);
   request->callback = callback;
   request->callback_param = callback_param;
   ++this->pending_requests_;
@@ -168,10 +171,7 @@ void Manager::on_connected_() {
   }
 #endif
 #if defined(VEDIRECT_USE_HEXFRAME)
-  if (this->auto_create_hex_entities_ || this->hex_registers_.size()) {
-    this->send_hexframe(HexFrame_Command(HEXFRAME::COMMAND::Ping));
-    this->millis_last_ping_tx_ = this->millis_last_hexframe_tx_;
-  }
+  new PollingContext(this);
 #endif
 }
 
@@ -179,6 +179,15 @@ void Manager::on_disconnected_() {
   ESP_LOGD(this->logtag_, "LINK: disconnected");
   this->connected_ = false;
   this->reset();  // cleanup the frame handler
+#if defined(VEDIRECT_USE_HEXFRAME)
+  this->requests_cancel_();
+  if (this->polling_context_) {
+    ESP_LOGD(this->logtag_, "HEX FRAME: polling terminated");
+    delete this->polling_context_;
+    this->polling_context_ = nullptr;
+  }
+#endif
+
 #ifdef USE_BINARY_SENSOR
   if (auto link_connected = this->link_connected_) {
     link_connected->publish_state(false);
@@ -202,6 +211,19 @@ const char *FRAME_ERRORS[] = {
 };
 
 #if defined(VEDIRECT_USE_HEXFRAME)
+void Manager::requests_cancel_() {
+  if (this->pending_requests_) {
+    ESP_LOGD(this->logtag_, "HEX FRAME: cancelling %d pending requests", this->pending_requests_);
+    for (auto request : this->requests_) {
+      if (request->millis) {
+        this->cancel_timeout(request->tag);
+      }
+    }
+    this->pending_requests_ = 0;
+  }
+  this->requests_.clear();
+}
+
 void Manager::requests_match_get_or_set_(const RxHexFrame &rx_hex_frame) {
   for (auto request : this->requests_) {
     if ((request->hex_frame.command() == rx_hex_frame.command()) &&
@@ -214,6 +236,47 @@ void Manager::requests_match_get_or_set_(const RxHexFrame &rx_hex_frame) {
       return;
     }
   }
+}
+
+Manager::PollingContext::PollingContext(Manager *manager) {
+  this->registers.reserve(manager->hex_registers_.size());
+  for (auto &it : manager->hex_registers_) {
+    this->registers.push_back(it.second);
+  }
+  this->current = this->registers.begin();
+  manager->polling_context_ = this;
+  ESP_LOGD(manager->logtag_, "HEX FRAME: polling begin (%d registers)", this->registers.size());
+  advance_(manager, nullptr);
+}
+
+void Manager::PollingContext::advance_(void *callback_param, const RxHexFrame *) {
+  auto _manager = reinterpret_cast<Manager *>(callback_param);
+  auto _polling_context = _manager->polling_context_;
+  if (!_polling_context) {
+    // polling context was deleted (shouldnt happen if we've cleaned the async requests)
+    ESP_LOGE(_manager->logtag_, "HEX FRAME: polling interrupted");
+    return;
+  }
+  auto reg_it = _polling_context->current;
+  auto const reg_end = _polling_context->registers.end();
+  for (int i = 0; i < VEDIRECT_POLLING_BATCH_COUNT; ++i) {
+    if (reg_it == reg_end) {
+      goto terminate_;
+    }
+    _manager->send_register_get((*reg_it)->get_register_id());
+    ++reg_it;
+  }
+
+  if (reg_it != reg_end) {
+    _manager->request(HEXFRAME::COMMAND::Get, (*reg_it)->get_register_id(), nullptr, HEXFRAME::DATA_TYPE::VARIADIC,
+                      advance_, _manager);
+    _polling_context->current = ++reg_it;
+    return;
+  }
+terminate_:
+  delete _polling_context;
+  _manager->polling_context_ = nullptr;
+  ESP_LOGD(_manager->logtag_, "HEX FRAME: polling end");
 }
 
 void Manager::on_frame_hex_(const RxHexFrame &hexframe) {
@@ -229,7 +292,7 @@ void Manager::on_frame_hex_(const RxHexFrame &hexframe) {
     this->rawhexframe_->publish_state(std::string(hexframe.encoded()));
 #endif
 
-  this->millis_last_hexframe_rx_ = this->millis_last_rx_;
+  this->millis_last_frame_rx_ = this->millis_last_rx_;
   switch (hexframe.command()) {
     case HEXFRAME::COMMAND::Async:
       goto _forward_to_register;
@@ -269,7 +332,7 @@ void Manager::on_frame_text_(TextRecord **text_records, uint8_t text_records_cou
   if (!this->connected_)
     this->on_connected_();
 
-  this->millis_last_textframe_rx_ = this->millis_last_rx_;
+  this->millis_last_frame_rx_ = this->millis_last_rx_;
 
 #ifdef USE_TEXT_SENSOR
   if (auto rawtextframe = this->rawtextframe_) {

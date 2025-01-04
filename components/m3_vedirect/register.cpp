@@ -46,10 +46,8 @@ void Register::update_platforms() {
 }
 
 Register *Register::cascade_dispatcher_(Register *hex_register) {
-  auto dispatcher = new RegisterDispatcher();
-  dispatcher->cascade_dispatcher_(this);
-  dispatcher->cascade_dispatcher_(hex_register);
-  return dispatcher;
+  auto dispatcher = new RegisterDispatcher(this);
+  return dispatcher->cascade_dispatcher_(hex_register);
 }
 
 const char *NumericRegister::UNIT_TO_DEVICE_CLASS[REG_DEF::UNIT::UNIT_COUNT] = {

@@ -97,8 +97,8 @@ class Manager : public uart::UARTDevice, public Component, protected FrameHandle
   typedef void *request_callback_param_t;
   typedef void (*request_callback_t)(request_callback_param_t callback_param, const RxHexFrame *hex_frame);
 
-  void request_set(register_id_t register_id, const void *data, HEXFRAME::DATA_TYPE data_type,
-                   request_callback_t callback, request_callback_param_t callback_param);
+  void request(HEXFRAME::COMMAND command, register_id_t register_id, const void *data, HEXFRAME::DATA_TYPE data_type,
+               request_callback_t callback, request_callback_param_t callback_param);
 
   void add_on_frame_callback(std::function<void(const HexFrame &)> callback) {
     this->hexframe_callback_.add(std::move(callback));
@@ -178,6 +178,7 @@ class Manager : public uart::UARTDevice, public Component, protected FrameHandle
   // component state
   bool connected_{false};
   uint32_t millis_last_rx_{0};
+  uint32_t millis_last_frame_rx_{0};
 
   inline void on_connected_();
   inline void on_disconnected_();
@@ -185,11 +186,9 @@ class Manager : public uart::UARTDevice, public Component, protected FrameHandle
 // override FrameHandler
 #if defined(VEDIRECT_USE_HEXFRAME)
   bool auto_create_hex_entities_{false};
-  uint32_t ping_timeout_{0};
+  uint32_t ping_timeout_{VEDIRECT_PING_TIMEOUT_MILLIS};
 
   uint32_t millis_last_ping_tx_{0};
-  uint32_t millis_last_hexframe_rx_{0};
-  uint32_t millis_last_hexframe_tx_{0};
 
   friend class HexFrameTrigger;
   CallbackManager<void(const HexFrame &)> hexframe_callback_;
@@ -207,7 +206,19 @@ class Manager : public uart::UARTDevice, public Component, protected FrameHandle
 
   std::vector<Request *> requests_;
   uint32_t pending_requests_{0};
+  /// @brief Cancel all pending requests without invoking callbacks (link disconnected)
+  void requests_cancel_();
   void requests_match_get_or_set_(const RxHexFrame &hexframe);
+
+  /// @brief Context class for polling HEX registers on connection
+  struct PollingContext {
+    std::vector<Register *> registers;
+    std::vector<Register *>::const_iterator current;
+    PollingContext(Manager *manager);
+    static void advance_(void *callback_param, const RxHexFrame *);
+  };
+  friend class PollingContext;
+  PollingContext *polling_context_{nullptr};
 
   void on_frame_hex_(const RxHexFrame &hexframe) override;
   void on_frame_hex_error_(Error error) override;
@@ -215,8 +226,6 @@ class Manager : public uart::UARTDevice, public Component, protected FrameHandle
 
 #if defined(VEDIRECT_USE_TEXTFRAME)
   bool auto_create_text_entities_{true};
-
-  uint32_t millis_last_textframe_rx_{0};
 
   // Map entities/registers by TEXT frame record names so that we can forward
   // data while parsing.

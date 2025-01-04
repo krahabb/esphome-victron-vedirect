@@ -76,8 +76,8 @@ void Select::control(const std::string &value) {
   // TODO: are we 100% sure enum_def is defined ? check yaml init code
   auto lookup_def = this->reg_def_->enum_def->lookup_value(value.c_str());
   if (lookup_def) {
-    this->manager->request_set(this->reg_def_->register_id, &lookup_def->value, this->reg_def_->data_type,
-                               request_callback_, this);
+    this->manager->request(HEXFRAME::COMMAND::Set, this->reg_def_->register_id, &lookup_def->value,
+                           this->reg_def_->data_type, request_callback_, this);
   }
 }
 

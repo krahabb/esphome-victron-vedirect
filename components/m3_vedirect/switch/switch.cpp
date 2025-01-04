@@ -82,8 +82,8 @@ void Switch::write_state(bool state) {
       hexvalue = state ? 1 : 0;
       break;
   }
-  this->manager->request_set(this->reg_def_->register_id, &hexvalue, this->reg_def_->data_type, request_callback_,
-                             this);
+  this->manager->request(HEXFRAME::COMMAND::Set, this->reg_def_->register_id, &hexvalue, this->reg_def_->data_type,
+                         request_callback_, this);
 }
 
 void Switch::request_callback_(Manager::request_callback_param_t callback_param, const RxHexFrame *hex_frame) {

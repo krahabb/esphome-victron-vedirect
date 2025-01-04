@@ -53,6 +53,20 @@ HexFrame::DecodeResult HexFrame::decode(const char *hexdigits, bool addchecksum)
   }
 }
 
+void HexFrame::command(HEXFRAME::COMMAND command, register_id_t register_id, const void *data, size_t data_size) {
+  auto record = this->record();
+  record->command = command;
+  record->register_id = register_id;
+  record->flags = 0;
+  if (data) {
+    memcpy(record->data, data, data_size);
+    this->rawframe_end_ = this->rawframe_begin_ + 4 + data_size;
+  } else {
+    this->rawframe_end_ = this->rawframe_begin_ + 4;
+  }
+  this->encode_();
+}
+
 void HexFrame::encode_() {
   this->encoded_end_ = this->encoded_begin_;
   int hexframe_size = this->size();

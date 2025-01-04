@@ -139,27 +139,14 @@ struct HexFrame {
     this->rawframe_end_ = this->rawframe_begin_ + 1;
     this->encode_();
   }
-  /// @brief Builds a command GET register frame
-  /// @param register_id
-  inline void command_get(register_id_t register_id) {
-    auto record = this->record();
-    record->command = HEXFRAME::COMMAND::Get;
-    record->register_id = register_id;
-    record->flags = 0;
-    this->rawframe_end_ = this->rawframe_begin_ + 4;
-    this->encode_();
+  /// @brief Builds a command GET/SET register frame
+  void command(HEXFRAME::COMMAND command, register_id_t register_id, const void *data = nullptr, size_t data_size = 0);
+  inline void command_get(register_id_t register_id) { this->command(HEXFRAME::COMMAND::Get, register_id); }
+  inline void command_set(register_id_t register_id, const void *data, size_t data_size) {
+    this->command(HEXFRAME::COMMAND::Set, register_id, data, data_size);
   }
-  void command_set(register_id_t register_id, const void *data, size_t data_size) {
-    auto record = this->record();
-    record->command = HEXFRAME::COMMAND::Set;
-    record->register_id = register_id;
-    record->flags = 0;
-    memcpy(record->data, data, data_size);
-    this->rawframe_end_ = this->rawframe_begin_ + 4 + data_size;
-    this->encode_();
-  }
-  void command_set(register_id_t register_id, const void *data, HEXFRAME::DATA_TYPE data_type) {
-    this->command_set(register_id, data, HEXFRAME::DATA_TYPE_TO_SIZE[data_type]);
+  inline void command_set(register_id_t register_id, const void *data, HEXFRAME::DATA_TYPE data_type) {
+    this->command(HEXFRAME::COMMAND::Set, register_id, data, HEXFRAME::DATA_TYPE_TO_SIZE[data_type]);
   }
   template<typename T> void command_set(register_id_t register_id, T data) {
     auto record = this->record();

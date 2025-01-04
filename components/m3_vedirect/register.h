@@ -47,7 +47,8 @@ class Register {
   // build_entity_func_t for the case.
   static void update_platforms();
 
-  const REG_DEF *get_reg_def() { return this->reg_def_; }
+  const REG_DEF *get_reg_def() const { return this->reg_def_; }
+  register_id_t get_register_id() const { return this->reg_def_->register_id; }
 
 #if defined(VEDIRECT_USE_HEXFRAME)
   typedef FrameHandler::RxHexFrame RxHexFrame;
@@ -131,11 +132,22 @@ class RegisterDispatcher final : public Register {
  public:
   friend class Register;
 #if defined(VEDIRECT_USE_HEXFRAME) && defined(VEDIRECT_USE_TEXTFRAME)
-  RegisterDispatcher() : Register(parse_hex_default_, parse_text_empty_) {}
+  RegisterDispatcher(Register *hex_register) : Register(parse_hex_default_, parse_text_empty_) {
+    // We'll just use the first register's reg_def_ as our own.
+    // Be careful since these could be quite different REG_DEFs except their register_id
+    this->reg_def_ = hex_register->reg_def_;
+    this->hex_registers_.push_back(hex_register);
+  }
 #elif defined(VEDIRECT_USE_HEXFRAME)
-  RegisterDispatcher() : Register(parse_hex_default_) {}
+  RegisterDispatcher(Register *hex_register) : Register(parse_hex_default_) {
+    this->reg_def_ = hex_register->reg_def_;
+    this->hex_registers_.push_back(hex_register);
+  }
 #elif defined(VEDIRECT_USE_TEXTFRAME)
-  RegisterDispatcher() : Register(parse_text_empty_) {}
+  RegisterDispatcher(Register *hex_register) : Register(parse_text_empty_) {
+    this->reg_def_ = hex_register->reg_def_;
+    this->hex_registers_.push_back(hex_register);
+  }
 #endif
  protected:
   std::vector<Register *> hex_registers_;
@@ -150,6 +162,7 @@ class RegisterDispatcher final : public Register {
     this->hex_registers_.push_back(hex_register);
     return this;
   }
+
 #if defined(VEDIRECT_USE_HEXFRAME)
   static void parse_hex_default_(Register *hex_register, const RxHexFrame *hex_frame) {
     for (auto hex_register : static_cast<RegisterDispatcher *>(hex_register)->hex_registers_) {
