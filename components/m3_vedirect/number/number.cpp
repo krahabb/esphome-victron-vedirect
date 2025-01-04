@@ -50,7 +50,7 @@ void Number::init_reg_def_() {
 void Number::control(float value) {
   // Assuming 'value' is not out of range of the underlying data type, this code
   // should work for both signed/unsigned quantities
-  int native_value = value / this->hex_scale_;
+  int native_value = std::roundf(value / this->hex_scale_);
   this->manager->request(HEXFRAME::COMMAND::Set, this->reg_def_->register_id, &native_value, this->reg_def_->data_type,
                          request_callback_, this);
 };
