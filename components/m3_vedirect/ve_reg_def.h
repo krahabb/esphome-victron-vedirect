@@ -119,8 +119,10 @@ struct REG_DEF {
     W,
     Ah,
     kWh,
-    SOC_PERCENTAGE,
+    SOC_PERCENTAGE,  // device class: battery, state class: measurement
+    PERCENTAGE,      // device class: none, state class: measurement
     minute,
+    HOUR,
     CELSIUS,
     KELVIN,
     UNIT_COUNT,

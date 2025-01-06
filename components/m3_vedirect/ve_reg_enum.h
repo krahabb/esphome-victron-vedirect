@@ -2,6 +2,13 @@
 
 // clang-format off
 
+#define ENUM_BAT_VOLTAGE_SETTING(ENUM) \
+  ENUM(auto_detect, 0x00), ENUM(v12, 12), ENUM(v24, 24), ENUM(v36, 36), ENUM(v48, 48),
+
+// BAT_TYPE enum depends on the device type so we're just providing a 'defective' common definition
+#define ENUM_BAT_TYPE(ENUM) \
+  ENUM(user, 0xFF), 
+
 #define BITMASK_BLE_MODE(ENUM) \
   ENUM(enabled, 0x00),
 
@@ -67,6 +74,12 @@
 #define ENUM_RELAY_MODE(ENUM) \
   ENUM(warnings, 0), ENUM(remote, 2), ENUM(disabled, 3), ENUM(normal, 4), ENUM(battery_low, 5), \
   ENUM(fan, 6),
+
+#define ENUM_REMOTE_INPUT_MODE_CONFIG(ENUM) \
+  ENUM(remote_on_off, 0), ENUM(two_wire_bms, 1),
+
+#define BITMASK_TWO_WIRE_BMS_INPUT_STATE(ENUM) \
+  ENUM(two_wire_bms_enabled, 0), ENUM(allow_to_discharge, 1), ENUM(allow_to_charge, 2),
 
 #define BITMASK_WARNING_REASON(ENUM) \
   ENUM(low_battery_voltage, 0x00), ENUM(high_battery_voltage, 0x01), ENUM(low_soc, 0x02), \

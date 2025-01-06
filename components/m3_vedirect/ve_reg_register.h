@@ -1,3 +1,40 @@
+/*
+  ve_reg_register.h: VE.Direct registers configuration
+
+  Registers are defined using a set of macros which take care of 'propagating'
+  these definitions in different code contexts (like generating mock symbols).
+
+  These definitions (if included with the corresponding 'FLAVOR' symbol in code compile/link) will be used to
+  auto configure an entity appearing on the channel (auto-create option in configuration.yaml).
+  These could also be used to statically configure an entity in configuration.yaml through the 'type' parameter.
+  If no 'auto-create' is desired, entities/registers can be manually defined in configuration.yaml
+  by using the 'register' parameter and there's no need to add the definition here.
+
+  These macros will then work on the set of symbols/parameters defined here.
+  The parameters list depends on the 'CLASS' parameter:
+
+  MACRO(FLAVOR, CLASS, REGISTER_ID, TYPE/LABEL, ACCESS, [DATA_TYPE, UNIT, SCALE, TEXT_SCALE])
+
+  ENUM and BITMASK classes will refer to corresponding 'enum' definitions in ve_reg_enum.h
+  The special ENUM_S and BITMASK_S symbols refer to the same but with an additional parameter in order
+  to map these registers to a different enum/bitmask definition.
+
+  Be careful when adding new registers to order them by their 'REGISTER_ID' value since the code will
+  binary-search this value to find the register definition when 'auto-creating' the registers.
+
+  Register types/labels are set trying to match the official Victron names as much as possible.
+  Some special conventions are used to define 'unknown' registers i.e. based off reverse engineering
+  field observations.
+  For example
+    - MACRO(MULTI_RS, NUMERIC, 0xD5C8, UNKNOWN_D5C8, READ_ONLY, uint32_t, UNKNOWN, S_1, S_1)
+      is used when the content is observed as unsigned 32-bit integer but the meaning is unknown.
+    - MACRO(MULTI_RS, NUMERIC, 0x2215, U_AC_OUT_REAL_POWER, READ_ONLY, int32_t, W, S_1, S_1)
+      is used when also the data meaning is inferred (note the U_ prefix) but still there's no official docs.
+
+  WARNING: 'macros are evil' so that any symbol defined through the code-base could interfere
+  with those defined here and lead to no compilation or even more subtle issues
+
+*/
 #pragma once
 #include "ve_reg_flavor.h"
 // clang-format off
@@ -18,9 +55,9 @@
   MACRO(CHG, ENUM_S, 0x020A, CHARGER_DEVICE_STATE, READ_ONLY, DEVICE_STATE) \
   MACRO(INV, NUMERIC, 0x0230, AC_OUT_VOLTAGE_SETPOINT, READ_WRITE, uint16_t, V, S_0_01, S_0_01) \
   MACRO(MPPT_RS, NUMERIC, 0x0244, MPPT_TRACKERS, CONSTANT, uint8_t, NONE, S_1, S_1) \
-  MACRO(MULTI_RS, NUMERIC, 0x0305, UNKNOWN_0305, READ_ONLY, uint32_t, UNKNOWN, S_1, S_1) \
-  MACRO(MULTI_RS, NUMERIC, 0x0310, UNKNOWN_0310, READ_ONLY, uint32_t, UNKNOWN, S_1, S_1) \
-  MACRO(MULTI_RS, NUMERIC, 0x0311, UNKNOWN_0311, READ_ONLY, int32_t, UNKNOWN, S_1, S_1) \
+  MACRO(MULTI_RS, NUMERIC, 0x0305, UNKNOWN_0305, READ_ONLY, uint32_t, kWh, S_0_001, S_0_001) \
+  MACRO(MULTI_RS, NUMERIC, 0x0310, U_OUTPUT_YIELD, READ_ONLY, uint32_t, kWh, S_0_001, S_0_001) \
+  MACRO(MULTI_RS, NUMERIC, 0x0311, U_USER_YIELD, READ_ONLY, uint32_t, kWh, S_0_001, S_0_001) \
   MACRO(ANY, BITMASK, 0x031C, WARNING_REASON, READ_ONLY, uint16_t) \
   MACRO(ANY, BITMASK_S, 0x031E, ALARM_REASON, READ_ONLY, uint16_t, WARNING_REASON) \
   MACRO(INV, NUMERIC, 0x0320, ALARM_LOW_VOLTAGE_SET, READ_WRITE, uint16_t, V, S_0_01, S_0_01) \
@@ -40,10 +77,12 @@
   MACRO(INV, NUMERIC, 0x2212, VOLTAGE_RANGE_MAX, CONSTANT, uint16_t, V, S_0_01, S_0_01) \
   MACRO(MULTI_RS, NUMERIC, 0x2213, U_AC_OUT_VOLTAGE, READ_ONLY, int16_t, V, S_0_01, S_0_01) \
   MACRO(MULTI_RS, NUMERIC, 0x2214, U_AC_OUT_CURRENT, READ_ONLY, int16_t, A, S_0_01, S_0_01) \
-  MACRO(MULTI_RS, NUMERIC, 0x2215, U_AC_OUT_APPARENT_POWER, READ_ONLY, int32_t, VA, S_1, S_1) \
-  MACRO(MULTI_RS, NUMERIC, 0x2216, UNKNOWN_2216, READ_ONLY, int32_t, UNKNOWN, S_1, S_1) \
+  MACRO(MULTI_RS, NUMERIC, 0x2215, U_AC_OUT_REAL_POWER, READ_ONLY, int32_t, W, S_1, S_1) \
+  MACRO(MULTI_RS, NUMERIC, 0x2216, U_AC_OUT_APPARENT_POWER, READ_ONLY, int32_t, VA, S_1, S_1) \
   MACRO(MULTI_RS, NUMERIC, 0x2250, UNKNOWN_2250, READ_ONLY, int16_t, UNKNOWN, S_1, S_1) \
   MACRO(MULTI_RS, NUMERIC, 0x2251, UNKNOWN_2251, READ_ONLY, int16_t, UNKNOWN, S_1, S_1) \
+  MACRO(MPPT_RS, BITMASK, 0xD01F, TWO_WIRE_BMS_INPUT_STATE, READ_ONLY, uint8_t) \
+  MACRO(MPPT_RS, ENUM, 0xD0C0, REMOTE_INPUT_MODE_CONFIG, READ_WRITE) \
   MACRO(MULTI_RS, NUMERIC, 0xD3A1, U_AC_OUT_CURRENT_MA, READ_ONLY, int32_t, A, S_0_001, S_0_001) \
   MACRO(MULTI_RS, NUMERIC, 0xD5C8, UNKNOWN_D5C8, READ_ONLY, uint32_t, UNKNOWN, S_1, S_1) \
   MACRO(MULTI_RS, NUMERIC, 0xD5CA, UNKNOWN_D5CA, READ_ONLY, uint32_t, UNKNOWN, S_1, S_1) \
@@ -76,6 +115,7 @@
   MACRO(MPPT, NUMERIC, 0xEDBC, PANEL_POWER, READ_ONLY, uint32_t, W, S_0_01, S_1) \
   MACRO(MPPT, NUMERIC, 0xEDBD, PANEL_CURRENT, READ_ONLY, uint16_t, A, S_0_1, S_0_1) \
   MACRO(MPPT_RS, NUMERIC, 0xEDBF, PANEL_MAXIMUM_CURRENT, CONSTANT, uint16_t, A, S_0_1, S_0_1) \
+  MACRO(MPPT, NUMERIC, 0xEDCA, VOLTAGE_COMPENSATION, READ_WRITE, uint16_t, V, S_0_01, S_0_01) \
   MACRO(MPPT, NUMERIC, 0xEDD0, MAXIMUM_POWER_YESTERDAY, READ_ONLY, uint16_t, W, S_1, S_1) \
   MACRO(MPPT, NUMERIC, 0xEDD1, YIELD_YESTERDAY, READ_ONLY, uint16_t, kWh, S_0_01, S_0_01) \
   MACRO(MPPT, NUMERIC, 0xEDD2, MAXIMUM_POWER_TODAY, READ_ONLY, uint16_t, W, S_1, S_1) \
@@ -86,7 +126,26 @@
   MACRO(CHG, NUMERIC, 0xEDDB, CHR_INTERNAL_TEMPERATURE, READ_ONLY, int16_t, CELSIUS, S_0_01, S_0_01) \
   MACRO(MPPT, NUMERIC, 0xEDDC, USER_YIELD, READ_ONLY, uint32_t, kWh, S_0_01, S_0_01) \
   MACRO(MPPT, NUMERIC, 0xEDDD, SYSTEM_YIELD, READ_ONLY, uint32_t, kWh, S_0_01, S_0_01) \
+  MACRO(MPPT, NUMERIC, 0xEDE0, BAT_LOW_TEMP_LEVEL, READ_WRITE, int16_t, CELSIUS, S_0_01, S_0_01) \
+  MACRO(MPPT, NUMERIC, 0xEDE2, REBULK_VOLTAGE_OFFSET, READ_WRITE, uint16_t, V, S_0_01, S_0_01) /* marked as 0xED2E but it seems a typo*/ \
+  MACRO(MPPT, NUMERIC, 0xEDE3, EQUALISATION_DURATION, READ_WRITE, uint16_t, HOUR, S_0_01, S_0_01) \
+  MACRO(MPPT, NUMERIC, 0xEDE4, EQUALISATION_CURRENT_LEVEL, READ_WRITE, uint8_t, PERCENTAGE, S_1, S_1) \
+  MACRO(MPPT, BOOLEAN, 0xEDE5, AUTO_EQUALISE_STOP_ON_VOLTAGE, READ_WRITE) \
+  MACRO(MPPT, NUMERIC, 0xEDE6, LOW_TEMP_CHARGE_CURRENT, READ_WRITE, uint16_t, A, S_0_1, S_0_1) \
+  MACRO(MPPT, BOOLEAN, 0xEDE8, BMS_PRESENT, READ_WRITE) \
+  MACRO(MPPT, ENUM, 0xEDEA, BAT_VOLTAGE_SETTING, READ_WRITE) \
   MACRO(ANY, NUMERIC, 0xEDEC, BAT_TEMPERATURE, READ_ONLY, uint16_t, CELSIUS, S_0_01, S_1) \
+  MACRO(MPPT, NUMERIC, 0xEDEF, BAT_VOLTAGE, READ_ONLY, uint8_t, V, S_1, S_1) \
+  MACRO(MPPT, NUMERIC, 0xEDF0, BAT_MAX_CURRENT, READ_WRITE, uint16_t, A, S_0_1, S_0_1) \
+  MACRO(MPPT, ENUM, 0xEDF1, BAT_TYPE, READ_WRITE) \
+  MACRO(MPPT, NUMERIC, 0xEDF2, BAT_TEMPERATURE_COMPENSATION, READ_WRITE, int16_t, NONE, S_0_01, S_0_01) \
+  MACRO(MPPT, NUMERIC, 0xEDF4, BAT_EQUALISATION_VOLTAGE, READ_WRITE, uint16_t, V, S_0_01, S_0_01) \
+  MACRO(MPPT, NUMERIC, 0xEDF6, BAT_FLOAT_VOLTAGE, READ_WRITE, uint16_t, V, S_0_01, S_0_01) \
+  MACRO(MPPT, NUMERIC, 0xEDF7, BAT_ABSORPTION_VOLTAGE, READ_WRITE, uint16_t, V, S_0_01, S_0_01) \
+  MACRO(MPPT, NUMERIC, 0xEDFB, BAT_ABSORPTION_LIMIT, READ_WRITE, uint16_t, HOUR, S_0_01, S_0_01) \
+  MACRO(MPPT, NUMERIC, 0xEDFC, BAT_BULK_LIMIT, READ_WRITE, uint16_t, HOUR, S_0_01, S_0_01) \
+  MACRO(MPPT, NUMERIC, 0xEDFD, AUTOMATIC_EQUALISATION_MODE, READ_WRITE, uint8_t, NONE, S_1, S_1) \
+  MACRO(MPPT, BOOLEAN, 0xEDFE, ADAPTIVE_MODE, READ_WRITE) \
   MACRO(BMV71, NUMERIC, 0xEEB8, DC_MONITOR_MODE, READ_ONLY, int16_t, NONE, S_1, S_1) /*might be R/W and it's a signed ENUM*/ \
   MACRO(BMV, BOOLEAN, 0xEEFC, ALARM_BUZZER, READ_WRITE)
 

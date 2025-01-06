@@ -15,11 +15,11 @@ def _read_file(file_name: str):
     with open(file_name, encoding="utf-8") as f:
         f_data = f.read()
         # remove block comments
-        f_data = re.sub(r"/\*.*\*/", "", f_data, flags=re.MULTILINE)
+        f_data = re.sub(r"/\*.*?\*/", "", f_data, flags=re.DOTALL)
         # remove single line comments
-        f_data = re.sub(r"//.*", "", f_data, flags=re.MULTILINE)
+        f_data = re.sub(r"//.*", "", f_data)
         # remove newlines
-        f_data = re.sub(r"\n|\r", "", f_data, flags=re.MULTILINE)
+        f_data = re.sub(r"\n|\r", "", f_data)
         return f_data
 
 

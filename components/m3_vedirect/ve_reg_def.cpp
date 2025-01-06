@@ -34,8 +34,9 @@ ENUM_DEF::LOOKUP_RESULT ENUM_DEF::get_lookup(enum_t value) {
   return result;
 }
 
+// ensure these labels match the UNIT_XXXX in EspHome/HA
 const char *REG_DEF::UNITS[UNIT::UNIT_COUNT] = {
-    nullptr, nullptr, "A", "V", "VA", "W", "Ah", "kWh", "%", "min", "°C", "°C",
+    nullptr, nullptr, "A", "V", "VA", "W", "Ah", "kWh", "%", "%", "min", "h", "°C", "°C",
 };
 const float REG_DEF::SCALE_TO_SCALE[SCALE::SCALE_COUNT] = {
     1.f,    // S_1,
