@@ -70,13 +70,46 @@ def validate_numeric_scale():
     )
 
 
-def validate_enum_lookup_def(value):
-    if not isinstance(value, dict) or len(value) != 1:
-        raise cv.Invalid(
-            f"Expected a single item dict with {{value}}: {{label}}, got {value}"
-        )
-    for enum_value, enum_label in value.items():
-        return int(enum_value), enum_label
+def _validate_enum_lookup_def(value):
+    """Validate the configuration is a single item dict with {value}: {label}.
+    representing an ENUM_DEF::LOOKUP_DEF item.
+    """
+    if isinstance(value, dict) and len(value) == 1:
+        for enum_value, enum_label in value.items():
+            return cv.positive_int(enum_value), cv.string_strict(enum_label)
+
+    raise cv.Invalid(
+        f"Expected a single item dict with {{value}}: {{'label'}}, got {value}"
+    )
+
+
+ENUM_LOOKUP_DEF_LIST_SCHEMA = cv.Schema([_validate_enum_lookup_def])
+
+
+def validate_enum_lookup_def_list(value):
+    """Validate this configuration option to be an ordered list of ENUM_DEF::LOOKUP_DEF.
+
+    If the config value is not a list, it is automatically converted to a
+    single-item list.
+
+    None and empty dictionaries are converted to empty lists.
+
+    Code inspired by cv.ensure_list
+    """
+
+    cv.check_not_templatable(value)
+    if value is None or (isinstance(value, dict) and not value):
+        return []
+    if not isinstance(value, list):
+        return [_validate_enum_lookup_def(value)]
+    result = ENUM_LOOKUP_DEF_LIST_SCHEMA(value)
+    enum_value = -1
+    for lookup_def in result:
+        if lookup_def[0] <= enum_value:
+            raise cv.Invalid(f"Expected a list in ascending order, got {result}")
+        enum_value = lookup_def[0]
+
+    return result
 
 
 CONF_REGISTER = "register"
@@ -101,8 +134,8 @@ CONF_SCALE = "scale"
 CONF_UNIT = "unit"
 VEDIRECT_REGISTER_CLASS_SCHEMAS = {
     ve_reg.CLASS.BOOLEAN: cv.Schema({}),
-    ve_reg.CLASS.BITMASK: cv.ensure_list(validate_enum_lookup_def),
-    ve_reg.CLASS.ENUM: cv.ensure_list(validate_enum_lookup_def),
+    ve_reg.CLASS.BITMASK: validate_enum_lookup_def_list,
+    ve_reg.CLASS.ENUM: validate_enum_lookup_def_list,
     ve_reg.CLASS.NUMERIC: cv.Schema(
         {
             cv.Optional(CONF_SCALE, default=1): validate_numeric_scale(),
