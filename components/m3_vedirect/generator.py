@@ -88,7 +88,7 @@ def generate_docs():
 
         reg_def_table = [
             "<!--BEGIN REG_DEF_TABLE-->\n",
-            "|type|class|r/w|hex address|flavor|\n",
+            "|register|class|r/w|hex address|flavor|\n",
             "|---|---|---|---|---|\n",
         ]
         reg_def_table.extend(
@@ -198,7 +198,7 @@ def generate_docs():
                 for reg_def_type, reg_def in platform_entities.items():
                     flavor_example += "".join(
                         (
-                            f"{INDENT_YAML}{INDENT_YAML}{INDENT_YAML}- type: {reg_def_type}\n",
+                            f"{INDENT_YAML}{INDENT_YAML}{INDENT_YAML}- register: {reg_def_type}\n",
                             f'{INDENT_YAML}{INDENT_YAML}{INDENT_YAML}{INDENT_YAML}name: "{reg_def_type}"\n',
                         )
                     )

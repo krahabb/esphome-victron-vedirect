@@ -26,79 +26,79 @@ number:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: AC_OUT_VOLTAGE_SETPOINT
+      - register: AC_OUT_VOLTAGE_SETPOINT
         name: "AC_OUT_VOLTAGE_SETPOINT"
-      - type: ALARM_LOW_VOLTAGE_SET
+      - register: ALARM_LOW_VOLTAGE_SET
         name: "ALARM_LOW_VOLTAGE_SET"
-      - type: ALARM_LOW_VOLTAGE_CLEAR
+      - register: ALARM_LOW_VOLTAGE_CLEAR
         name: "ALARM_LOW_VOLTAGE_CLEAR"
-      - type: SHUTDOWN_LOW_VOLTAGE_SET
+      - register: SHUTDOWN_LOW_VOLTAGE_SET
         name: "SHUTDOWN_LOW_VOLTAGE_SET"
 
 select:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: DEVICE_MODE
+      - register: DEVICE_MODE
         name: "DEVICE_MODE"
-      - type: RELAY_MODE
+      - register: RELAY_MODE
         name: "RELAY_MODE"
 
 sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: AC_OUT_VOLTAGE
+      - register: AC_OUT_VOLTAGE
         name: "AC_OUT_VOLTAGE"
-      - type: AC_OUT_CURRENT
+      - register: AC_OUT_CURRENT
         name: "AC_OUT_CURRENT"
-      - type: AC_OUT_APPARENT_POWER
+      - register: AC_OUT_APPARENT_POWER
         name: "AC_OUT_APPARENT_POWER"
-      - type: VOLTAGE_RANGE_MIN
+      - register: VOLTAGE_RANGE_MIN
         name: "VOLTAGE_RANGE_MIN"
-      - type: VOLTAGE_RANGE_MAX
+      - register: VOLTAGE_RANGE_MAX
         name: "VOLTAGE_RANGE_MAX"
-      - type: DC_CHANNEL1_VOLTAGE
+      - register: DC_CHANNEL1_VOLTAGE
         name: "DC_CHANNEL1_VOLTAGE"
-      - type: DC_CHANNEL1_CURRENT
+      - register: DC_CHANNEL1_CURRENT
         name: "DC_CHANNEL1_CURRENT"
-      - type: BAT_TEMPERATURE
+      - register: BAT_TEMPERATURE
         name: "BAT_TEMPERATURE"
 
 switch:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: RELAY_CONTROL
+      - register: RELAY_CONTROL
         name: "RELAY_CONTROL"
 
 text_sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: BLE_MODE
+      - register: BLE_MODE
         name: "BLE_MODE"
-      - type: PRODUCT_ID
+      - register: PRODUCT_ID
         name: "PRODUCT_ID"
-      - type: APP_VER
+      - register: APP_VER
         name: "APP_VER"
-      - type: SERIAL_NUMBER
+      - register: SERIAL_NUMBER
         name: "SERIAL_NUMBER"
-      - type: MODEL_NAME
+      - register: MODEL_NAME
         name: "MODEL_NAME"
-      - type: CAPABILITIES
+      - register: CAPABILITIES
         name: "CAPABILITIES"
-      - type: CAPABILITIES_BLE
+      - register: CAPABILITIES_BLE
         name: "CAPABILITIES_BLE"
-      - type: DEVICE_STATE
+      - register: DEVICE_STATE
         name: "DEVICE_STATE"
-      - type: INVERTER_DEVICE_STATE
-        name: "INVERTER_DEVICE_STATE"
-      - type: DEVICE_OFF_REASON
+      - register: DEVICE_OFF_REASON
         name: "DEVICE_OFF_REASON"
-      - type: DEVICE_OFF_REASON_2
+      - register: DEVICE_OFF_REASON_2
         name: "DEVICE_OFF_REASON_2"
-      - type: WARNING_REASON
+      - register: INVERTER_DEVICE_STATE
+        name: "INVERTER_DEVICE_STATE"
+      - register: WARNING_REASON
         name: "WARNING_REASON"
-      - type: ALARM_REASON
+      - register: ALARM_REASON
         name: "ALARM_REASON"

@@ -79,7 +79,6 @@ def validate_enum_lookup_def(value):
         return int(enum_value), enum_label
 
 
-CONF_TYPE = "type"
 CONF_REGISTER = "register"
 CONF_TEXT_LABEL = "text_label"
 # (HEX) Register schema
@@ -245,8 +244,9 @@ class VEDirectPlatform:
         )
         self.vedirect_schema = base_schema.extend(
             {
-                cv.Exclusive(CONF_TYPE, "_type"): validate_mock_enum(ve_reg.TYPE),
-                cv.Exclusive(CONF_REGISTER, "_type"): cv.Schema(register_schema),
+                cv.Required(CONF_REGISTER): cv.Any(
+                    validate_mock_enum(ve_reg.TYPE), cv.Schema(register_schema)
+                ),
             },
             *vedirect_schemas,
         )
@@ -272,25 +272,22 @@ class VEDirectPlatform:
             flavors = MANAGERS_CONFIG[config[CONF_VEDIRECT_ID]][CONF_FLAVOR]
             inflated_flavors = inflate_flavors(flavors)
             for vedirect_entity_config in config[CONF_VEDIRECT_ENTITIES]:
-                if CONF_TYPE in vedirect_entity_config:
-                    entity_type = vedirect_entity_config[CONF_TYPE]
-                    type_flavor = ve_reg.REG_DEFS[entity_type].flavor
+                register = vedirect_entity_config[CONF_REGISTER]
+                if isinstance(register, str):
+                    type_flavor = ve_reg.REG_DEFS[register].flavor
                     if type_flavor not in inflated_flavors:
                         raise cv.Invalid(
-                            f"Entity type {entity_type} is defined for flavor {type_flavor} which is not available in configured flavors:{flavors}"
+                            f"Entity type {register} is defined for flavor {type_flavor} which is not available in configured flavors:{flavors}"
                         )
         return config
 
     async def new_vedirect_entity(self, config, manager):
         entity = cg.new_Pvariable(config[ec.CONF_ID], manager)
-        valid = False
 
-        if CONF_TYPE in config:
-            valid = True
-            cg.add(manager.init_register(entity, config[CONF_TYPE]))
-        elif CONF_REGISTER in config:
-            valid = True
-            register_config = config[CONF_REGISTER]
+        register_config = config[CONF_REGISTER]
+        if isinstance(register_config, str):
+            cg.add(manager.init_register(entity, register_config))
+        elif isinstance(register_config, dict):
             register_id = register_config[CONF_ADDRESS]
             if register_id:
                 define_use_hexframe()
@@ -348,8 +345,6 @@ class VEDirectPlatform:
         if CONF_MASK in config:
             cg.add(entity.set_mask(config[CONF_MASK]))
 
-        if not valid:
-            raise cv.Invalid(f"Either {CONF_TYPE} or {CONF_REGISTER} must be provided")
         return entity
 
     async def to_code(self, config: dict):

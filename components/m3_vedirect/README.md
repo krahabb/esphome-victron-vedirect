@@ -65,14 +65,14 @@ sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0    
     vedirect_entities:
-      - type: DC_CHANNEL1_VOLTAGE
+      - register: DC_CHANNEL1_VOLTAGE
         name: 'Battery voltage'
-      - type: DC_CHANNEL1_CURRENT
+      - register: DC_CHANNEL1_CURRENT
         name: 'Battery current'
-      - type: PANEL_POWER
+      - register: PANEL_POWER
         name: 'PV power'
 ```
-Using the `type` configuration will automatically set all of the needed info in order to correctly decode the register carrying the battery voltage (DC_CHANNEL1_VOLTAGE) and setup the sensor entity with proper unit, digits and scale. Now, keep in mind the `DC_CHANNEL1_VOLTAGE`-`DC_CHANNEL1_CURRENT`-`PANEL_POWER` registers are defined as `NUMERIC` in 'component terms' and that allows them to be configured as (numeric) sensors (this is useful when inspecting the list of available [pre-defined registers](#register-definitions) published later in order to know which kind of entity supports it)
+Using the `register` configuration will automatically set all of the needed info in order to correctly decode the register carrying the battery voltage (DC_CHANNEL1_VOLTAGE) and setup the sensor entity with proper unit, digits, scale, device class, state class. Now, keep in mind the `DC_CHANNEL1_VOLTAGE`-`DC_CHANNEL1_CURRENT`-`PANEL_POWER` registers are defined as `NUMERIC` in 'component terms' and that allows them to be configured as (numeric) sensors (this is useful when inspecting the list of available [pre-defined registers](#register-definitions) published later in order to know which kind of entity supports it)
 
 Let's see another useful 
 Example 2:
@@ -82,7 +82,7 @@ text_sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0    
     vedirect_entities:
-      - type: DEVICE_STATE
+      - register: DEVICE_STATE
         name: 'Device state (enum)'
 ```
 Register `DEVICE_STATE` (hex address 0x0201) is encoded as an `ENUM` and this component carries (hardcoded in english) the different labels associated with those enum values (according to Victron official nomenclature) so that the text sensor will show you these labels instead of numeric values. This is true for any register defined as `ENUM` so that the text sensor will always try to map the numeric value to a meaningful label. 
@@ -92,16 +92,16 @@ sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: DEVICE_STATE
+      - register: DEVICE_STATE
         name: 'Device state (raw)'
 ```
 More: you can map the same register (`DEVICE_STATE`) to more than one entity so that you can see it in different representations (both as a sensor and a text_sensor). The component will dispatch the incoming raw data to all of the entities representing it.
 
 ## Register definitions
-This table exposes the list of actually pre-defined registers to be used with the 'shortcut' configuration `type`. It is extracted from the source file definitions in [ve_reg_register.h](https://github.com/krahabb/esphome-victron-vedirect/blob/main/components/m3_vedirect/ve_reg_register.h) which is always the 'source of truth' for the component.
+This table exposes the list of actually pre-defined registers to be used with the 'shortcut' configuration `register`. It is extracted from the source file definitions in [ve_reg_register.h](https://github.com/krahabb/esphome-victron-vedirect/blob/main/components/m3_vedirect/ve_reg_register.h) which is always the 'source of truth' for the component.
 
 <!--BEGIN REG_DEF_TABLE-->
-|type|class|r/w|hex address|flavor|
+|register|class|r/w|hex address|flavor|
 |---|---|---|---|---|
 |BLE_MODE|BITMASK|READ_WRITE|0x0090|ANY|
 |PRODUCT_ID|VOID|CONSTANT|0x0100|ANY|
@@ -244,7 +244,7 @@ binary_sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: DEVICE_OFF_REASON_2
+      - register: DEVICE_OFF_REASON_2
         name: 'No input power'
         mask: 1 # Bit 0 of DEVICE_OFF_REASON bitmask
 ```

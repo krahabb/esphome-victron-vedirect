@@ -26,99 +26,144 @@ binary_sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: SOLAR_ACTIVITY
+      - register: SOLAR_ACTIVITY
         name: "SOLAR_ACTIVITY"
-      - type: LOAD_OUTPUT_STATE
+      - register: LOAD_OUTPUT_STATE
         name: "LOAD_OUTPUT_STATE"
+
+number:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    vedirect_entities:
+      - register: VOLTAGE_COMPENSATION
+        name: "VOLTAGE_COMPENSATION"
+      - register: BAT_LOW_TEMP_LEVEL
+        name: "BAT_LOW_TEMP_LEVEL"
+      - register: REBULK_VOLTAGE_OFFSET
+        name: "REBULK_VOLTAGE_OFFSET"
+      - register: EQUALISATION_DURATION
+        name: "EQUALISATION_DURATION"
+      - register: EQUALISATION_CURRENT_LEVEL
+        name: "EQUALISATION_CURRENT_LEVEL"
+      - register: LOW_TEMP_CHARGE_CURRENT
+        name: "LOW_TEMP_CHARGE_CURRENT"
+      - register: BAT_MAX_CURRENT
+        name: "BAT_MAX_CURRENT"
+      - register: BAT_TEMPERATURE_COMPENSATION
+        name: "BAT_TEMPERATURE_COMPENSATION"
+      - register: BAT_EQUALISATION_VOLTAGE
+        name: "BAT_EQUALISATION_VOLTAGE"
+      - register: BAT_FLOAT_VOLTAGE
+        name: "BAT_FLOAT_VOLTAGE"
+      - register: BAT_ABSORPTION_VOLTAGE
+        name: "BAT_ABSORPTION_VOLTAGE"
+      - register: BAT_ABSORPTION_LIMIT
+        name: "BAT_ABSORPTION_LIMIT"
+      - register: BAT_BULK_LIMIT
+        name: "BAT_BULK_LIMIT"
+      - register: AUTOMATIC_EQUALISATION_MODE
+        name: "AUTOMATIC_EQUALISATION_MODE"
 
 select:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: DEVICE_MODE
+      - register: DEVICE_MODE
         name: "DEVICE_MODE"
-      - type: RELAY_MODE
+      - register: RELAY_MODE
         name: "RELAY_MODE"
+      - register: BAT_VOLTAGE_SETTING
+        name: "BAT_VOLTAGE_SETTING"
+      - register: BAT_TYPE
+        name: "BAT_TYPE"
 
 sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: TIME_OF_DAY
+      - register: TIME_OF_DAY
         name: "TIME_OF_DAY"
-      - type: DC_CHANNEL1_VOLTAGE
+      - register: DC_CHANNEL1_VOLTAGE
         name: "DC_CHANNEL1_VOLTAGE"
-      - type: DC_CHANNEL1_CURRENT
+      - register: DC_CHANNEL1_CURRENT
         name: "DC_CHANNEL1_CURRENT"
-      - type: LOAD_CURRENT
+      - register: LOAD_CURRENT
         name: "LOAD_CURRENT"
-      - type: PANEL_MAXIMUM_VOLTAGE
+      - register: PANEL_MAXIMUM_VOLTAGE
         name: "PANEL_MAXIMUM_VOLTAGE"
-      - type: PANEL_VOLTAGE
+      - register: PANEL_VOLTAGE
         name: "PANEL_VOLTAGE"
-      - type: PANEL_POWER
+      - register: PANEL_POWER
         name: "PANEL_POWER"
-      - type: PANEL_CURRENT
+      - register: PANEL_CURRENT
         name: "PANEL_CURRENT"
-      - type: MAXIMUM_POWER_YESTERDAY
+      - register: MAXIMUM_POWER_YESTERDAY
         name: "MAXIMUM_POWER_YESTERDAY"
-      - type: YIELD_YESTERDAY
+      - register: YIELD_YESTERDAY
         name: "YIELD_YESTERDAY"
-      - type: MAXIMUM_POWER_TODAY
+      - register: MAXIMUM_POWER_TODAY
         name: "MAXIMUM_POWER_TODAY"
-      - type: YIELD_TODAY
+      - register: YIELD_TODAY
         name: "YIELD_TODAY"
-      - type: CHARGER_VOLTAGE
+      - register: CHARGER_VOLTAGE
         name: "CHARGER_VOLTAGE"
-      - type: CHARGER_CURRENT
+      - register: CHARGER_CURRENT
         name: "CHARGER_CURRENT"
-      - type: CHR_INTERNAL_TEMPERATURE
+      - register: CHR_INTERNAL_TEMPERATURE
         name: "CHR_INTERNAL_TEMPERATURE"
-      - type: USER_YIELD
+      - register: USER_YIELD
         name: "USER_YIELD"
-      - type: SYSTEM_YIELD
+      - register: SYSTEM_YIELD
         name: "SYSTEM_YIELD"
-      - type: BAT_TEMPERATURE
+      - register: BAT_TEMPERATURE
         name: "BAT_TEMPERATURE"
+      - register: BAT_VOLTAGE
+        name: "BAT_VOLTAGE"
 
 switch:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: RELAY_CONTROL
+      - register: RELAY_CONTROL
         name: "RELAY_CONTROL"
+      - register: AUTO_EQUALISE_STOP_ON_VOLTAGE
+        name: "AUTO_EQUALISE_STOP_ON_VOLTAGE"
+      - register: BMS_PRESENT
+        name: "BMS_PRESENT"
+      - register: ADAPTIVE_MODE
+        name: "ADAPTIVE_MODE"
 
 text_sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: BLE_MODE
+      - register: BLE_MODE
         name: "BLE_MODE"
-      - type: PRODUCT_ID
+      - register: PRODUCT_ID
         name: "PRODUCT_ID"
-      - type: APP_VER
+      - register: APP_VER
         name: "APP_VER"
-      - type: SERIAL_NUMBER
+      - register: SERIAL_NUMBER
         name: "SERIAL_NUMBER"
-      - type: MODEL_NAME
+      - register: MODEL_NAME
         name: "MODEL_NAME"
-      - type: CAPABILITIES
+      - register: CAPABILITIES
         name: "CAPABILITIES"
-      - type: CAPABILITIES_BLE
+      - register: CAPABILITIES_BLE
         name: "CAPABILITIES_BLE"
-      - type: DEVICE_STATE
+      - register: DEVICE_STATE
         name: "DEVICE_STATE"
-      - type: CHARGER_DEVICE_STATE
-        name: "CHARGER_DEVICE_STATE"
-      - type: DEVICE_OFF_REASON
+      - register: DEVICE_OFF_REASON
         name: "DEVICE_OFF_REASON"
-      - type: DEVICE_OFF_REASON_2
+      - register: DEVICE_OFF_REASON_2
         name: "DEVICE_OFF_REASON_2"
-      - type: WARNING_REASON
+      - register: CHARGER_DEVICE_STATE
+        name: "CHARGER_DEVICE_STATE"
+      - register: WARNING_REASON
         name: "WARNING_REASON"
-      - type: ALARM_REASON
+      - register: ALARM_REASON
         name: "ALARM_REASON"
-      - type: MPPT_TRACKER_MODE
+      - register: MPPT_TRACKER_MODE
         name: "MPPT_TRACKER_MODE"
-      - type: CHR_ERROR_CODE
+      - register: CHR_ERROR_CODE
         name: "CHR_ERROR_CODE"

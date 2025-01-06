@@ -26,172 +26,244 @@ binary_sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: SOLAR_ACTIVITY
+      - register: SOLAR_ACTIVITY
         name: "SOLAR_ACTIVITY"
-      - type: LOAD_OUTPUT_STATE
+      - register: LOAD_OUTPUT_STATE
         name: "LOAD_OUTPUT_STATE"
 
 number:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: AC_OUT_VOLTAGE_SETPOINT
+      - register: AC_OUT_VOLTAGE_SETPOINT
         name: "AC_OUT_VOLTAGE_SETPOINT"
-      - type: ALARM_LOW_VOLTAGE_SET
+      - register: ALARM_LOW_VOLTAGE_SET
         name: "ALARM_LOW_VOLTAGE_SET"
-      - type: ALARM_LOW_VOLTAGE_CLEAR
+      - register: ALARM_LOW_VOLTAGE_CLEAR
         name: "ALARM_LOW_VOLTAGE_CLEAR"
-      - type: SHUTDOWN_LOW_VOLTAGE_SET
+      - register: SHUTDOWN_LOW_VOLTAGE_SET
         name: "SHUTDOWN_LOW_VOLTAGE_SET"
+      - register: VOLTAGE_COMPENSATION
+        name: "VOLTAGE_COMPENSATION"
+      - register: BAT_LOW_TEMP_LEVEL
+        name: "BAT_LOW_TEMP_LEVEL"
+      - register: REBULK_VOLTAGE_OFFSET
+        name: "REBULK_VOLTAGE_OFFSET"
+      - register: EQUALISATION_DURATION
+        name: "EQUALISATION_DURATION"
+      - register: EQUALISATION_CURRENT_LEVEL
+        name: "EQUALISATION_CURRENT_LEVEL"
+      - register: LOW_TEMP_CHARGE_CURRENT
+        name: "LOW_TEMP_CHARGE_CURRENT"
+      - register: BAT_MAX_CURRENT
+        name: "BAT_MAX_CURRENT"
+      - register: BAT_TEMPERATURE_COMPENSATION
+        name: "BAT_TEMPERATURE_COMPENSATION"
+      - register: BAT_EQUALISATION_VOLTAGE
+        name: "BAT_EQUALISATION_VOLTAGE"
+      - register: BAT_FLOAT_VOLTAGE
+        name: "BAT_FLOAT_VOLTAGE"
+      - register: BAT_ABSORPTION_VOLTAGE
+        name: "BAT_ABSORPTION_VOLTAGE"
+      - register: BAT_ABSORPTION_LIMIT
+        name: "BAT_ABSORPTION_LIMIT"
+      - register: BAT_BULK_LIMIT
+        name: "BAT_BULK_LIMIT"
+      - register: AUTOMATIC_EQUALISATION_MODE
+        name: "AUTOMATIC_EQUALISATION_MODE"
 
 select:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: DEVICE_MODE
+      - register: DEVICE_MODE
         name: "DEVICE_MODE"
-      - type: RELAY_MODE
+      - register: RELAY_MODE
         name: "RELAY_MODE"
+      - register: REMOTE_INPUT_MODE_CONFIG
+        name: "REMOTE_INPUT_MODE_CONFIG"
+      - register: BAT_VOLTAGE_SETTING
+        name: "BAT_VOLTAGE_SETTING"
+      - register: BAT_TYPE
+        name: "BAT_TYPE"
 
 sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: MPPT_TRACKERS
+      - register: MPPT_TRACKERS
         name: "MPPT_TRACKERS"
-      - type: TTG
+      - register: UNKNOWN_0305
+        name: "UNKNOWN_0305"
+      - register: U_OUTPUT_YIELD
+        name: "U_OUTPUT_YIELD"
+      - register: U_USER_YIELD
+        name: "U_USER_YIELD"
+      - register: UNKNOWN_0FFC
+        name: "UNKNOWN_0FFC"
+      - register: TTG
         name: "TTG"
-      - type: SOC
+      - register: SOC
         name: "SOC"
-      - type: TIME_OF_DAY
+      - register: TIME_OF_DAY
         name: "TIME_OF_DAY"
-      - type: AC_OUT_VOLTAGE
+      - register: AC_OUT_VOLTAGE
         name: "AC_OUT_VOLTAGE"
-      - type: AC_OUT_CURRENT
+      - register: AC_OUT_CURRENT
         name: "AC_OUT_CURRENT"
-      - type: AC_OUT_APPARENT_POWER
+      - register: AC_OUT_APPARENT_POWER
         name: "AC_OUT_APPARENT_POWER"
-      - type: VOLTAGE_RANGE_MIN
+      - register: VOLTAGE_RANGE_MIN
         name: "VOLTAGE_RANGE_MIN"
-      - type: VOLTAGE_RANGE_MAX
+      - register: VOLTAGE_RANGE_MAX
         name: "VOLTAGE_RANGE_MAX"
-      - type: PANEL_VOLTAGE_1
+      - register: U_AC_OUT_VOLTAGE
+        name: "U_AC_OUT_VOLTAGE"
+      - register: U_AC_OUT_CURRENT
+        name: "U_AC_OUT_CURRENT"
+      - register: U_AC_OUT_REAL_POWER
+        name: "U_AC_OUT_REAL_POWER"
+      - register: U_AC_OUT_APPARENT_POWER
+        name: "U_AC_OUT_APPARENT_POWER"
+      - register: UNKNOWN_2250
+        name: "UNKNOWN_2250"
+      - register: UNKNOWN_2251
+        name: "UNKNOWN_2251"
+      - register: U_AC_OUT_CURRENT_MA
+        name: "U_AC_OUT_CURRENT_MA"
+      - register: UNKNOWN_D5C8
+        name: "UNKNOWN_D5C8"
+      - register: UNKNOWN_D5CA
+        name: "UNKNOWN_D5CA"
+      - register: UNKNOWN_D5CB
+        name: "UNKNOWN_D5CB"
+      - register: PANEL_VOLTAGE_1
         name: "PANEL_VOLTAGE_1"
-      - type: PANEL_POWER_1
+      - register: PANEL_POWER_1
         name: "PANEL_POWER_1"
-      - type: PANEL_CURRENT_1
+      - register: PANEL_CURRENT_1
         name: "PANEL_CURRENT_1"
-      - type: PANEL_VOLTAGE_2
+      - register: PANEL_VOLTAGE_2
         name: "PANEL_VOLTAGE_2"
-      - type: PANEL_POWER_2
+      - register: PANEL_POWER_2
         name: "PANEL_POWER_2"
-      - type: PANEL_CURRENT_2
+      - register: PANEL_CURRENT_2
         name: "PANEL_CURRENT_2"
-      - type: PANEL_VOLTAGE_3
+      - register: PANEL_VOLTAGE_3
         name: "PANEL_VOLTAGE_3"
-      - type: PANEL_POWER_3
+      - register: PANEL_POWER_3
         name: "PANEL_POWER_3"
-      - type: PANEL_CURRENT_3
+      - register: PANEL_CURRENT_3
         name: "PANEL_CURRENT_3"
-      - type: PANEL_VOLTAGE_4
+      - register: PANEL_VOLTAGE_4
         name: "PANEL_VOLTAGE_4"
-      - type: PANEL_POWER_4
+      - register: PANEL_POWER_4
         name: "PANEL_POWER_4"
-      - type: PANEL_CURRENT_4
+      - register: PANEL_CURRENT_4
         name: "PANEL_CURRENT_4"
-      - type: BATTERY_RIPPLE_VOLTAGE
+      - register: BATTERY_RIPPLE_VOLTAGE
         name: "BATTERY_RIPPLE_VOLTAGE"
-      - type: DC_CHANNEL1_VOLTAGE
+      - register: DC_CHANNEL1_VOLTAGE
         name: "DC_CHANNEL1_VOLTAGE"
-      - type: DC_CHANNEL1_POWER
+      - register: DC_CHANNEL1_POWER
         name: "DC_CHANNEL1_POWER"
-      - type: DC_CHANNEL1_CURRENT
+      - register: DC_CHANNEL1_CURRENT
         name: "DC_CHANNEL1_CURRENT"
-      - type: LOAD_CURRENT
+      - register: LOAD_CURRENT
         name: "LOAD_CURRENT"
-      - type: PANEL_MAXIMUM_VOLTAGE
+      - register: PANEL_MAXIMUM_VOLTAGE
         name: "PANEL_MAXIMUM_VOLTAGE"
-      - type: PANEL_VOLTAGE
+      - register: PANEL_VOLTAGE
         name: "PANEL_VOLTAGE"
-      - type: PANEL_POWER
+      - register: PANEL_POWER
         name: "PANEL_POWER"
-      - type: PANEL_CURRENT
+      - register: PANEL_CURRENT
         name: "PANEL_CURRENT"
-      - type: PANEL_MAXIMUM_CURRENT
+      - register: PANEL_MAXIMUM_CURRENT
         name: "PANEL_MAXIMUM_CURRENT"
-      - type: MAXIMUM_POWER_YESTERDAY
+      - register: MAXIMUM_POWER_YESTERDAY
         name: "MAXIMUM_POWER_YESTERDAY"
-      - type: YIELD_YESTERDAY
+      - register: YIELD_YESTERDAY
         name: "YIELD_YESTERDAY"
-      - type: MAXIMUM_POWER_TODAY
+      - register: MAXIMUM_POWER_TODAY
         name: "MAXIMUM_POWER_TODAY"
-      - type: YIELD_TODAY
+      - register: YIELD_TODAY
         name: "YIELD_TODAY"
-      - type: CHARGER_VOLTAGE
+      - register: CHARGER_VOLTAGE
         name: "CHARGER_VOLTAGE"
-      - type: CHARGER_CURRENT
+      - register: CHARGER_CURRENT
         name: "CHARGER_CURRENT"
-      - type: CHR_INTERNAL_TEMPERATURE
+      - register: CHR_INTERNAL_TEMPERATURE
         name: "CHR_INTERNAL_TEMPERATURE"
-      - type: USER_YIELD
+      - register: USER_YIELD
         name: "USER_YIELD"
-      - type: SYSTEM_YIELD
+      - register: SYSTEM_YIELD
         name: "SYSTEM_YIELD"
-      - type: BAT_TEMPERATURE
+      - register: BAT_TEMPERATURE
         name: "BAT_TEMPERATURE"
-      - type: DC_MONITOR_MODE
+      - register: BAT_VOLTAGE
+        name: "BAT_VOLTAGE"
+      - register: DC_MONITOR_MODE
         name: "DC_MONITOR_MODE"
 
 switch:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: RELAY_CONTROL
+      - register: RELAY_CONTROL
         name: "RELAY_CONTROL"
-      - type: ALARM_BUZZER
+      - register: AUTO_EQUALISE_STOP_ON_VOLTAGE
+        name: "AUTO_EQUALISE_STOP_ON_VOLTAGE"
+      - register: BMS_PRESENT
+        name: "BMS_PRESENT"
+      - register: ADAPTIVE_MODE
+        name: "ADAPTIVE_MODE"
+      - register: ALARM_BUZZER
         name: "ALARM_BUZZER"
 
 text_sensor:
   - platform: m3_vedirect
     vedirect_id: vedirect_0
     vedirect_entities:
-      - type: BLE_MODE
+      - register: BLE_MODE
         name: "BLE_MODE"
-      - type: PRODUCT_ID
+      - register: PRODUCT_ID
         name: "PRODUCT_ID"
-      - type: APP_VER
+      - register: APP_VER
         name: "APP_VER"
-      - type: SERIAL_NUMBER
+      - register: SERIAL_NUMBER
         name: "SERIAL_NUMBER"
-      - type: MODEL_NAME
+      - register: MODEL_NAME
         name: "MODEL_NAME"
-      - type: CAPABILITIES
+      - register: CAPABILITIES
         name: "CAPABILITIES"
-      - type: CAPABILITIES_BLE
+      - register: CAPABILITIES_BLE
         name: "CAPABILITIES_BLE"
-      - type: DEVICE_STATE
+      - register: DEVICE_STATE
         name: "DEVICE_STATE"
-      - type: INVERTER_DEVICE_STATE
-        name: "INVERTER_DEVICE_STATE"
-      - type: CHARGER_DEVICE_STATE
-        name: "CHARGER_DEVICE_STATE"
-      - type: DEVICE_OFF_REASON
+      - register: DEVICE_OFF_REASON
         name: "DEVICE_OFF_REASON"
-      - type: DEVICE_OFF_REASON_2
+      - register: DEVICE_OFF_REASON_2
         name: "DEVICE_OFF_REASON_2"
-      - type: WARNING_REASON
+      - register: INVERTER_DEVICE_STATE
+        name: "INVERTER_DEVICE_STATE"
+      - register: CHARGER_DEVICE_STATE
+        name: "CHARGER_DEVICE_STATE"
+      - register: WARNING_REASON
         name: "WARNING_REASON"
-      - type: ALARM_REASON
+      - register: ALARM_REASON
         name: "ALARM_REASON"
-      - type: MPPT_TRACKER_MODE_1
+      - register: TWO_WIRE_BMS_INPUT_STATE
+        name: "TWO_WIRE_BMS_INPUT_STATE"
+      - register: MPPT_TRACKER_MODE_1
         name: "MPPT_TRACKER_MODE_1"
-      - type: MPPT_TRACKER_MODE_2
+      - register: MPPT_TRACKER_MODE_2
         name: "MPPT_TRACKER_MODE_2"
-      - type: MPPT_TRACKER_MODE_3
+      - register: MPPT_TRACKER_MODE_3
         name: "MPPT_TRACKER_MODE_3"
-      - type: MPPT_TRACKER_MODE_4
+      - register: MPPT_TRACKER_MODE_4
         name: "MPPT_TRACKER_MODE_4"
-      - type: MPPT_TRACKER_MODE
+      - register: MPPT_TRACKER_MODE
         name: "MPPT_TRACKER_MODE"
-      - type: CHR_ERROR_CODE
+      - register: CHR_ERROR_CODE
         name: "CHR_ERROR_CODE"
