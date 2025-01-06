@@ -48,7 +48,9 @@ class Register {
   static void update_platforms();
 
   const REG_DEF *get_reg_def() const { return this->reg_def_; }
-  register_id_t get_register_id() const { return this->reg_def_->register_id; }
+  register_id_t get_register_id() const {
+    return this->reg_def_ ? this->reg_def_->register_id : REG_DEF::REGISTER_UNDEFINED;
+  }
 
 #if defined(VEDIRECT_USE_HEXFRAME)
   typedef FrameHandler::RxHexFrame RxHexFrame;

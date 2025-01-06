@@ -240,8 +240,21 @@ void Manager::requests_match_get_or_set_(const RxHexFrame &rx_hex_frame) {
 
 Manager::PollingContext::PollingContext(Manager *manager) {
   this->registers.reserve(manager->hex_registers_.size());
-  for (auto &it : manager->hex_registers_) {
-    this->registers.push_back(it.second);
+  for (auto &hex_reg_it : manager->hex_registers_) {
+#if defined(VEDIRECT_USE_TEXTFRAME)
+    // We'll try to exclude registers which are already being updated by a text frame
+    bool skip = false;
+    for (auto &text_reg_it : manager->text_registers_) {
+      if (text_reg_it.second->get_register_id() == hex_reg_it.first) {
+        skip = true;
+        break;
+      }
+    }
+    if (skip) {
+      continue;
+    }
+#endif
+    this->registers.push_back(hex_reg_it.second);
   }
   this->current = this->registers.begin();
   manager->polling_context_ = this;
@@ -258,16 +271,9 @@ void Manager::PollingContext::advance_(void *callback_param, const RxHexFrame *)
     return;
   }
   auto reg_it = _polling_context->current;
-  auto const reg_end = _polling_context->registers.end();
-  for (int i = 0; i < VEDIRECT_POLLING_BATCH_COUNT; ++i) {
-    if (reg_it == reg_end) {
-      goto terminate_;
-    }
-    _manager->send_register_get((*reg_it)->get_register_id());
-    ++reg_it;
-  }
-
-  if (reg_it != reg_end) {
+  if (reg_it != _polling_context->registers.end()) {
+    // We need to wait processing at the device side for each request since it looks like
+    // it has limited buffering capacity and requests are skipped if we send them too fast.
     _manager->request(HEXFRAME::COMMAND::Get, (*reg_it)->get_register_id(), nullptr, HEXFRAME::DATA_TYPE::VARIADIC,
                       advance_, _manager);
     _polling_context->current = ++reg_it;

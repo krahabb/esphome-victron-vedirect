@@ -22,9 +22,6 @@ class Register;
 // reply after which we consider the command unsuccesful
 #define VEDIRECT_COMMAND_TIMEOUT_MILLIS 1000
 
-// number of registers to poll in a single batch
-#define VEDIRECT_POLLING_BATCH_COUNT 10
-
 // Helpers for unordered_map with const char* key
 #if __cpp_constexpr >= 201304L
 #define _RELAXEDCONSTEXPR constexpr
