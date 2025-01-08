@@ -51,7 +51,7 @@ void Sensor::init_reg_def_() {
       this->set_state_class(UNIT_TO_STATE_CLASS[reg_def->unit]);
       this->set_accuracy_decimals(SCALE_TO_DIGITS[reg_def->scale]);
       this->hex_scale_ = REG_DEF::SCALE_TO_SCALE[reg_def->scale];
-      this->text_scale_ = REG_DEF::SCALE_TO_SCALE[reg_def_->text_scale];
+      this->text_scale_ = REG_DEF::SCALE_TO_SCALE[reg_def->text_scale];
 #if defined(VEDIRECT_USE_HEXFRAME)
       switch (reg_def->unit) {
         case REG_DEF::UNIT::KELVIN:
@@ -70,18 +70,22 @@ void Sensor::init_reg_def_() {
 
 #if defined(VEDIRECT_USE_HEXFRAME)
 void Sensor::parse_hex_default_(Register *hex_register, const RxHexFrame *hex_frame) {
+  /* This is the handler used when no DATA_TYPE is specified.
+    Since we don't expect the data format to change, we can use the actual frame data size to
+    infer a somewhat reasonable data type. This will lack sign information though.
+    Once the data type is inferred, we'll install the proper handler for the next frame
+    so that we don't have to go through this process again.
+  */
   Sensor *sensor = static_cast<Sensor *>(hex_register);
-  float value;
   switch (hex_frame->data_size()) {
     case 1:
-      value = hex_frame->data_t<uint8_t>() * sensor->hex_scale_;
+      sensor->parse_hex_ = parse_hex_t_<uint8_t>;
       break;
     case 2:
-      // it might be signed though
-      value = hex_frame->data_t<uint16_t>() * sensor->hex_scale_;
+      sensor->parse_hex_ = parse_hex_t_<uint16_t>;
       break;
     case 4:
-      value = hex_frame->data_t<uint32_t>() * sensor->hex_scale_;
+      sensor->parse_hex_ = parse_hex_t_<uint32_t>;
       break;
     default:
       if (!std::isnan(sensor->raw_state)) {
@@ -89,9 +93,7 @@ void Sensor::parse_hex_default_(Register *hex_register, const RxHexFrame *hex_fr
       }
       return;
   }
-  if (sensor->raw_state != value) {
-    sensor->publish_state(value);
-  }
+  sensor->parse_hex_(hex_register, hex_frame);
 }
 
 void Sensor::parse_hex_kelvin_(Register *hex_register, const RxHexFrame *hex_frame) {
