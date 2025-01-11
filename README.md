@@ -1,1 +1,0 @@
-components/m3_vedirect/README.md

@@ -72,9 +72,9 @@ def generate_docs():
 
     import enum
 
-    README = "README.md"
-    FLAVOR_TEMPLATE = "m3_vedirect_flavor_template_.yaml"
-    FLAVOR_EXAMPLE = "m3_vedirect_flavor_%s_example.yaml"
+    README = "docs/README.md"
+    FLAVOR_TEMPLATE = "docs/m3_vedirect_flavor_template_.yaml"
+    FLAVOR_EXAMPLE = "docs/m3_vedirect_flavor_%s_example.yaml"
     INDENT_YAML = "  "
 
     def generate_readme():
