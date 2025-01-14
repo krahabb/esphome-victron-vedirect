@@ -1,3 +1,33 @@
 title: EspHome-Victron-VEDirect
 description: ESPHome component for Victron VE.Direct devices
-theme: jekyll-theme-slate
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - .github
+  - .gitignore
+  - .gitmodules
+  - .sass-cache
+  - .jekyll-cache
+  - .jekyll-metadata
+  - .vscode
+  - .DS_Store
+
+defaults:
+  -
+    scope:
+      path: "" # an empty string here means all files in the project
+    values:
+      layout: "default"
+
+theme: just-the-docs
+search_enabled: true
+# Aux links for the upper right navigation
+aux_links:
+  "View on GitHub":
+    - "//github.com/krahabb/esphome-victron-vedirect"
+# Makes Aux links open in a new tab. Default is false
+aux_links_new_tab: false
+# Color scheme supports "light" (default) and "dark"
+color_scheme: dark
