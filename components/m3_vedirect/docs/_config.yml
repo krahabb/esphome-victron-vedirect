@@ -1,5 +1,6 @@
 title: EspHome-Victron-VEDirect
 description: ESPHome component for Victron VE.Direct devices
+url: https://krahabb.github.io/esphome-victron-vedirect
 
 exclude:
   - Gemfile
