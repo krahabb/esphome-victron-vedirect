@@ -16,8 +16,7 @@ exclude:
   - .DS_Store
 
 defaults:
-  -
-    scope:
+  - scope:
       path: "" # an empty string here means all files in the project
     values:
       layout: "default"
@@ -32,3 +31,16 @@ aux_links:
 aux_links_new_tab: false
 # Color scheme supports "light" (default) and "dark"
 color_scheme: dark
+
+back_to_top: true
+back_to_top_text: "Top"
+
+callouts:
+  highlight:
+    color: yellow
+  note:
+    title: Note
+    color: blue
+  warning:
+    title: Warning
+    color: red
