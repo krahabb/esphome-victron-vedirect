@@ -15,6 +15,13 @@ These informations are generally carried over HEX frames where you can query/set
 
 ## Baseline example
 
+{: .highlight}
+
+> There are two (almost) interchangeable methods of configuring the binding between a register and an entity:
+> - using a preset 'register definition' (REG_DEF in component nomenclature): This is the most compact form and uses a predefined database stored in code (See `flavor` in [main component configuration](Configuration)). This is very compact as you should only set the register name and all the details about the register layout will be preset.
+> - manually configuring the register: This is more verbose but allows you to define the register layout/behavior the way you want and surely is needed in case the internal database misses the proper REG_DEF for your register usage.
+> The following documentation and examples will focus on the manual configuration in order to grasp the most about the way the component works. Once you got the idea you could anyway use the [preset REG_DEF(s)](/configuration/regdefs) embedded in the various flavors if you find this way better.
+
 As always, it's better to start off with an example and then dig into all of the nuances of entities configuration.
 The example uses a `sensor` to configure a `numeric` register since it will likely be the most used overall, being able to represent device measures. We'll then get to know how different entities would better suit different kind of registers.
 
@@ -45,7 +52,7 @@ This sample config will create a numeric `sensor` in EspHome binded to the devic
 
   {: .highlight}
 
-  > `address` and `text_label` are both optional meaning you can use either or both in order to bind the entity to the corrisponding protocol frame. Some registers are available in both TEXT and HEX frames and you might want to bind those 2 layers (protocols) of data to the same entity in EspHome (by specifying both keys). This way the entity will be updated whenever each of the data will enter the component. If you just set `address` you're only binding this entity to the data exchanged over the HEX framing. If you just set `text_label` you're only binding this entity to the data coming from the TEXT protocol layer.
+  > `address` and `text_label` are both optional meaning you can use either or both in order to bind the entity to the corrisponding protocol frame. Some registers are available in both TEXT and HEX frames and you might want to bind those 2 layers (protocols) of data to the same entity in EspHome (by specifying both keys). This way the entity will be updated whenever each of the data will enter the component. If you just set `address` you're only binding this entity to the data exchanged over the HEX framing. If you just set `text_label` you're only binding this entity to the data coming from the TEXT protocol layer. You can also decide to configure 2 entities for the same register: one binded to the HEX address and the other binded to the text_label (and see if they differ or not!)
 
   - `data_type` (optional - enum): Here you specify the data size/type of the HEX register frame. Every register has its own structure/layout and this can be checked out in the official docs. If left unset, the component will try to extract the correct size from the received payload but this can lead to misinterpretations of data (for `numeric` registers the data type, beside the length, also sets the signed/unsigned property of the numeric value)
   - `numeric` (optional - enum): This mapping sets the 'CLASS' for the register i.e. its semantics. See [Registers](Registers) for a complete explanation of the concept. Here we're just considering configuration of register VE_REG_DC_CHANNEL1_CURRENT which needs some info in order to be correctly parsed/rendered. We have:
