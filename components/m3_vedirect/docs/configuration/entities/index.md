@@ -21,7 +21,7 @@ These informations are generally carried over HEX frames where you can query/set
 >
 > - using a preset 'register definition' (REG_DEF in component nomenclature): This is the most compact form and uses a predefined database stored in code (See `flavor` in [main component configuration]({% link configuration/index.md %})). This is very compact as you should only set the register name and all the details about the register layout will be preset.
 > - manually configuring the register: This is more verbose but allows you to define the register layout/behavior the way you want and surely is needed in case the internal database misses the proper REG_DEF for your register usage.
->   The following documentation and examples will focus on the manual configuration in order to grasp the most about the way the component works. Once you got the idea you could anyway use the [preset REG_DEF(s)]({% link configuration/reg_defs.md %}) embedded in the various flavors if you find this way better
+>   The following documentation and examples will focus on the manual configuration in order to grasp the most about the way the component works. Once you got the idea you could anyway use the [preset REG_DEF(s)]({% link configuration/reg_defs.md %}) embedded in the various flavors if you find this way better.
 
 As always, it's better to start off with an example and then dig into all of the nuances of entities configuration.
 The example uses a `sensor` to configure a `numeric` register since it will likely be the most used overall, being able to represent device measures. We'll then get to know how different entities would better suit different kind of registers.
