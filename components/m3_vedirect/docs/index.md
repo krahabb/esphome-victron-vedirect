@@ -7,7 +7,6 @@ nav_order: 0
 > This documentation is _UNDER CONSTRUCTION_ so it is still incomplete and/or under review. Please be patient ;)
 > {: .warning}
 
-
 This [EspHome external component](https://esphome.io/components/external_components) contains a complete implementation to support [Victron VEDirect](https://www.victronenergy.com/upload/documents/VE.Direct-Protocol-3.33.pdf) serial interface in an EspHome project.
 
 # Main features:
@@ -30,21 +29,21 @@ external_components:
 
 There are some sample configurations with a basic explanation of the features for different scenarios:
 
-- [m3_vedirect_basic_example.yaml](samples/m3_vedirect_basic_example.yaml)
-- [m3_vedirect_minimal_example.yaml](samples/m3_vedirect_minimal_example.yaml)
-- [m3_vedirect_service_example.yaml](samples/m3_vedirect_service_example.yaml)
+- [m3_vedirect_basic_example.yaml]({% link samples/m3_vedirect_basic_example.yaml %})
+- [m3_vedirect_minimal_example.yaml]({% link samples/m3_vedirect_minimal_example.yaml %})
+- [m3_vedirect_service_example.yaml]({% link samples/m3_vedirect_service_example.yaml %})
 
 These samples mostly use the 'auto create' feature in order to automatically create an entity for any register data appearing on the communication channel. This might help to start over but could soon become cumbersome since HEX broadcasted registers might be a lot and the component will create HA entities for any of these.
 
 These other samples show instead usage of static entities definition for different 'flavors'.
 They're automatically built including all of the definitions for the proposed flavors and might include entities unavailable on your particular device.
 
-- [m3_vedirect_flavor_ALL_example.yaml](samples/m3_vedirect_flavor_ALL_example.yaml)
-- [m3_vedirect_flavor_BMV_example.yaml](samples/m3_vedirect_flavor_BMV_example.yaml)
-- [m3_vedirect_flavor_INV_example.yaml](samples/m3_vedirect_flavor_INV_example.yaml)
-- [m3_vedirect_flavor_MPPT_example.yaml](samples/m3_vedirect_flavor_MPPT_example.yaml)
+- [m3_vedirect_flavor_ALL_example.yaml]({% link samples/m3_vedirect_flavor_ALL_example.yaml %})
+- [m3_vedirect_flavor_BMV_example.yaml]({% link samples/m3_vedirect_flavor_BMV_example.yaml %})
+- [m3_vedirect_flavor_INV_example.yaml]({% link samples/m3_vedirect_flavor_INV_example.yaml %})
+- [m3_vedirect_flavor_MPPT_example.yaml]({% link samples/m3_vedirect_flavor_MPPT_example.yaml %})
 
-Checkout the [Configuration](configuration) pages for details about configuration.
+Checkout the [Configuration]({% link configuration/index.md %}) pages for details about configuration.
 
 # Hardware
 

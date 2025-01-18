@@ -1,5 +1,5 @@
 ---
-title: Preset register definitions
+title: Flavors and register definitions
 parent: Configuration
 nav_order: 5
 ---
