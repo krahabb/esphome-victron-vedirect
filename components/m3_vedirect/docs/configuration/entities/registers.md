@@ -49,16 +49,16 @@ VEDirect registers can be read-only or writable and this impacts which entity pl
 The component uses this property internally (defined in flavors REG_DEFs) to decide which entity type to automatically instantiate when using [`auto_create_entities`]({% link configuration/index.md %}) option while there's no place to use it when manually defining entities configuration since the 'writability' is naturally implied by the entity type.
 For example, you're still allowed to use a `number` entity to try writing into a `READ_ONLY` register but it'll likely end up in a frame error reply from the device.
 
-This table summarizes the allowed bindings between a register CLASS definition and an entity platforms. Details on how to configure these bindings are in the relevant platform documentation.
+This table summarizes the allowed bindings between a register CLASS definition and an entity platform. Details on how to configure these bindings are in the relevant platform documentation.
 
-| Entity platform                | Supported CLASSes                       |
-| ------------------------------ | --------------------------------------- |
-| [binary_sensor](binary_sensor) | `BOOLEAN`, `BITMASK`,`ENUM`             |
-| [number](number)               | `NUMERIC`                               |
-| [select](select)               | `ENUM`                                  |
-| [sensor](sensor)               | `NUMERIC`                               |
-| [switch](switch)               | `BOOLEAN`, `BITMASK`,(`ENUM` with care) |
-| [text_sensor](text_sensor)     | `BITMASK`,`ENUM`, `STRING`              |
+| Entity platform                | Supported CLASSes           |
+| ------------------------------ | --------------------------- |
+| [binary_sensor](binary_sensor) | `BOOLEAN`, `BITMASK`,`ENUM` |
+| [number](number)               | `NUMERIC`                   |
+| [select](select)               | `ENUM`                      |
+| [sensor](sensor)               | `NUMERIC`                   |
+| [switch](switch)               | `BOOLEAN`, `BITMASK`,`ENUM` |
+| [text_sensor](text_sensor)     | `BITMASK`,`ENUM`, `STRING`  |
 
 The following table summarizes the 'suggesteds/natural' binding relations between registers and entities:
 
