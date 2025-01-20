@@ -38,10 +38,12 @@ The [sample config]({% link samples/m3_vedirect_service_example.yaml %}) will sh
 {: .highlight}
 
 > Most of the times you'll just be done using your configured entities to interact with the device (for example by configuring a [`select`]({% link configuration/entities/select.md %}) for register `VE_REG_DEVICE_MODE`) but, nevertheless, there are some features of the VEDirect HEX interface which are not available through registers/entities and so you'd need to use this api in order to access them. For example:
-
-- Restarting the device: This is accomplished by sending the plain command `6` (through `send_hexframe`).
-- Managing Non-Volatile-Memory: Register `0xEB99` has a special behavior and could be managed by using the `send_command` action for the matter.
+> - Restarting the device: This is accomplished by sending the plain command `6` (through `send_hexframe`).
+> - Managing Non-Volatile-Memory: Register `0xEB99` has a special behavior and could be managed by using the `send_command` action for the matter.
 
 ## [Triggers](https://esphome.io/automations/actions.html#triggers)
 
 The component exposes the trigger `on_frame_received` for HEX frames. It can be used to access the internal struct carrying a received HEX frame. A simple example forwarding the frame payload through an `HomeAssistant event` is shown in the [example]({% link samples/m3_vedirect_service_example.yaml %})
+
+## Component api (through [`lambdas`](https://esphome.io/automations/templates#config-lambda))
+The main class of the component `m3_vedirect::Manager` has several apis in its public interface which are accessible through EspHome `lambdas`. Have a look at the component public interface [here](https://github.com/krahabb/esphome-victron-vedirect/blob/main/components/m3_vedirect/manager.h).

@@ -7,7 +7,7 @@ nav_order: 0
 > This documentation is _UNDER CONSTRUCTION_ so it is still incomplete and/or under review. Please be patient ;)
 > {: .warning}
 
-This [EspHome external component](https://esphome.io/components/external_components) contains a complete implementation to support [Victron VEDirect](https://www.victronenergy.com/upload/documents/VE.Direct-Protocol-3.33.pdf) serial interface in an EspHome project.
+This EspHome external component contains a complete implementation to support [Victron VEDirect](https://www.victronenergy.com/upload/documents/VE.Direct-Protocol-3.33.pdf) serial interface in an EspHome project.
 
 # Main features:
 
@@ -15,8 +15,8 @@ This [EspHome external component](https://esphome.io/components/external_compone
 - encode/decode of HEX frames
 - compatible with both `ESP8266` and `ESP32` platforms (likely compatible with the EspHome `HOST` platform too)
 - multiple components per EspHome node (as far as you have uarts to spare)
-- extended mapping of VEDirect registers to EspHome entities
-- includes a 'dictionary' of many common HEX registers layout to ease entities mapping/configuration
+- flexible mapping of VEDirect registers to EspHome entities
+- includes a 'database' of many common HEX registers layout to ease entities mapping/configuration
 - high level interface to directly send HEX frames through either an EspHome Action or in turn an HomeAssistant service
 - different layers of customizations/optimizations to reduce memory footprint and/or improve performance
 
