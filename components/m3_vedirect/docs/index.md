@@ -14,8 +14,10 @@ This [EspHome external component](https://esphome.io/components/external_compone
 - TEXT and HEX frame handling
 - encode/decode of HEX frames
 - compatible with both `ESP8266` and `ESP32` platforms (likely compatible with the EspHome `HOST` platform too)
+- multiple components per EspHome node (as far as you have uarts to spare)
 - extended mapping of VEDirect registers to EspHome entities
 - includes a 'dictionary' of many common HEX registers layout to ease entities mapping/configuration
+- high level interface to directly send HEX frames through either an EspHome Action or in turn an HomeAssistant service
 - different layers of customizations/optimizations to reduce memory footprint and/or improve performance
 
 # Quick start
