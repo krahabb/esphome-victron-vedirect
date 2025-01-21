@@ -72,52 +72,99 @@ def generate_docs():
 
     import enum
 
-    README = "docs/README.md"
-    FLAVOR_TEMPLATE = "docs/samples/m3_vedirect_flavor_template_.yaml"
-    FLAVOR_EXAMPLE = "docs/samples/m3_vedirect_flavor_%s_example.yaml"
-    INDENT_YAML = "  "
-
-    def generate_readme():
-        """
-        Generate the README.md based off the templated README_.md for the repo by
-        filling in dynamic/generated data.
-        """
-
-        with open(README, encoding="utf-8") as readme_stub:
-            readme = readme_stub.read()
-
-        reg_def_table = [
-            "<!--BEGIN REG_DEF_TABLE-->\n",
-            "|register|class|r/w|hex address|flavor|\n",
-            "|---|---|---|---|---|\n",
-        ]
-        reg_def_table.extend(
-            [
-                "".join(
-                    (
-                        f"|{reg_def_type}",  # type
-                        f"|{reg_def.cls.name}",  # class
-                        f"|{reg_def.access.name}",  # R/W
-                        f"|0x{reg_def.register_id:04X}",  # address
-                        f"|{reg_def.flavor}",  # flavor
-                        "|\n",
-                    )
+    def _generate_TABLE(name: str, items: list[tuple[str]]):
+        column_count = len(items[0])
+        column_sizes = [0] * column_count
+        for row in items:
+            for column_index, column in enumerate(row):
+                column_sizes[column_index] = max(
+                    column_sizes[column_index], len(column)
                 )
-                for reg_def_type, reg_def in ve_reg.REG_DEFS.items()
+
+        table = [
+            f"<!--BEGIN {name}_TABLE-->\n\n",
+            f'| {" | ".join(column.ljust(column_sizes[column_index]) for column_index, column in enumerate(items[0]))} |\n',
+            f'| {" | ".join( "-" * column_size for column_size in column_sizes)} |\n',
+        ]
+
+        table.extend(
+            [
+                f'| {" | ".join(column.ljust(column_sizes[column_index]) for column_index, column in enumerate(row))} |\n'
+                for row in items[1:]
             ]
         )
-        reg_def_table.append("<!--END REG_DEF_TABLE-->")
-        readme = re.sub(
-            r"<!--BEGIN REG_DEF_TABLE-->.*<!--END REG_DEF_TABLE-->",
-            "".join(reg_def_table),
-            readme,
-            flags=re.DOTALL,
+
+        table.append(f"\n<!--END {name}_TABLE-->")
+        return table
+
+    def _generate_REG_DEF_TABLE():
+        return _generate_TABLE(
+            "REG_DEF",
+            [
+                ("register", "hex address", "class", "r/w", "flavor"),
+                *[
+                    (
+                        reg_def_type,
+                        f"0x{reg_def.register_id:04X}",
+                        reg_def.cls.name,
+                        reg_def.access.name,
+                        reg_def.flavor,
+                    )
+                    for reg_def_type, reg_def in ve_reg.REG_DEFS.items()
+                    if not reg_def_type.startswith("UNKNOWN_")
+                ],
+            ],
         )
 
-        with open(README, mode="w", encoding="utf-8") as readme_file:
-            readme_file.write(readme)
+    def _generate_FLAVOR_TABLE():
+        return _generate_TABLE(
+            "FLAVOR",
+            [
+                ("flavor", "inherited flavors"),
+                *[
+                    (flavor, ", ".join(flavors))
+                    for flavor, flavors in ve_reg.FLAVOR_DEPENDENCIES.items()
+                ],
+            ],
+        )
+
+    def generate_tables():
+        """
+        Fill the docs files with table data generated from code
+        """
+        reg_def_table = _generate_REG_DEF_TABLE()
+        flavor_table = _generate_FLAVOR_TABLE()
+
+        for doc_filename in (
+            "docs/README.md",
+            "docs/configuration/REG_DEFS.md",
+        ):
+            with open(doc_filename, encoding="utf-8") as doc_file:
+                doc_src = doc_file.read()
+
+            doc_dst = re.sub(
+                r"<!--BEGIN REG_DEF_TABLE-->.*<!--END REG_DEF_TABLE-->",
+                "".join(reg_def_table),
+                doc_src,
+                flags=re.DOTALL,
+            )
+
+            doc_dst = re.sub(
+                r"<!--BEGIN FLAVOR_TABLE-->.*<!--END FLAVOR_TABLE-->",
+                "".join(flavor_table),
+                doc_dst,
+                flags=re.DOTALL,
+            )
+
+            if doc_dst != doc_src:
+                with open(doc_filename, mode="w", encoding="utf-8") as doc_file:
+                    doc_file.write(doc_dst)
 
     def generate_sample_config(flavor: str):
+        FLAVOR_TEMPLATE = "docs/samples/m3_vedirect_flavor_template_.yaml"
+        FLAVOR_EXAMPLE = "docs/samples/m3_vedirect_flavor_%s_example.yaml"
+        INDENT_YAML = "  "
+
         with open(FLAVOR_TEMPLATE, encoding="utf-8") as flavor_template_file:
             flavor_example = flavor_template_file.read()
 
@@ -208,12 +255,10 @@ def generate_docs():
         ) as flavor_example_file:
             flavor_example_file.write(flavor_example)
 
-    generate_readme()
+    generate_tables()
 
-    generate_sample_config("ALL")
-    generate_sample_config("MPPT")
-    generate_sample_config("INV")
-    generate_sample_config("BMV")
+    for flavor in ("ALL", "MPPT", "INV", "BMV"):
+        generate_sample_config(flavor)
 
 
 def generate():

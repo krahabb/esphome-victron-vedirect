@@ -27,6 +27,24 @@ This has to do with the fact that some register groups (i.e. some flavors) are c
 The following table lists the available flavors and their inheritance
 
 <!--BEGIN FLAVOR_TABLE-->
+
+| flavor   | inherited flavors                                                   |
+| -------- | ------------------------------------------------------------------- |
+| ALL      | MULTI_RS, MPPT_BS, MPPT_RS, INV_PHNX, CHG_PHNX, BMV60, BMV70, BMV71 |
+| MULTI_RS | INV, MPPT_RS                                                        |
+| INV_PHNX | INV                                                                 |
+| CHG_PHNX | CHG                                                                 |
+| MPPT_BS  | MPPT                                                                |
+| MPPT_RS  | MPPT                                                                |
+| BMV60    | BMV                                                                 |
+| BMV70    | BMV                                                                 |
+| BMV71    | BMV                                                                 |
+| MPPT     | CHG                                                                 |
+| BMV      | ANY                                                                 |
+| CHG      | ANY                                                                 |
+| INV      | ANY                                                                 |
+| ANY      |                                                                     |
+
 <!--END FLAVOR_TABLE-->
 
 ## Configuration using embedded register definitions
@@ -66,4 +84,109 @@ The register `PANEL_VOLTAGE` has `flavor` == `MPPT` so, in order to not incur a 
 
 The following is the full list of actually defined registers together with their relevant properties:
 <!--BEGIN REG_DEF_TABLE-->
+
+| register                      | hex address | class   | r/w        | flavor   |
+| ----------------------------- | ----------- | ------- | ---------- | -------- |
+| BLE_MODE                      | 0x0090      | BITMASK | READ_WRITE | ANY      |
+| PRODUCT_ID                    | 0x0100      | VOID    | CONSTANT   | ANY      |
+| APP_VER                       | 0x0102      | VOID    | CONSTANT   | ANY      |
+| SERIAL_NUMBER                 | 0x010A      | STRING  | CONSTANT   | ANY      |
+| MODEL_NAME                    | 0x010B      | STRING  | CONSTANT   | ANY      |
+| CAPABILITIES                  | 0x0140      | BITMASK | CONSTANT   | ANY      |
+| CAPABILITIES_BLE              | 0x0150      | BITMASK | CONSTANT   | ANY      |
+| DEVICE_MODE                   | 0x0200      | ENUM    | READ_WRITE | ANY      |
+| DEVICE_STATE                  | 0x0201      | ENUM    | READ_ONLY  | ANY      |
+| DEVICE_OFF_REASON             | 0x0205      | BITMASK | READ_ONLY  | ANY      |
+| DEVICE_OFF_REASON_2           | 0x0207      | BITMASK | READ_ONLY  | ANY      |
+| INVERTER_DEVICE_STATE         | 0x0209      | ENUM    | READ_ONLY  | INV      |
+| CHARGER_DEVICE_STATE          | 0x020A      | ENUM    | READ_ONLY  | CHG      |
+| AC_OUT_VOLTAGE_SETPOINT       | 0x0230      | NUMERIC | READ_WRITE | INV      |
+| MPPT_TRACKERS                 | 0x0244      | NUMERIC | CONSTANT   | MPPT_RS  |
+| U_OUTPUT_YIELD                | 0x0310      | NUMERIC | READ_ONLY  | MULTI_RS |
+| U_USER_YIELD                  | 0x0311      | NUMERIC | READ_ONLY  | MULTI_RS |
+| WARNING_REASON                | 0x031C      | BITMASK | READ_ONLY  | ANY      |
+| ALARM_REASON                  | 0x031E      | BITMASK | READ_ONLY  | ANY      |
+| ALARM_LOW_VOLTAGE_SET         | 0x0320      | NUMERIC | READ_WRITE | INV      |
+| ALARM_LOW_VOLTAGE_CLEAR       | 0x0321      | NUMERIC | READ_WRITE | INV      |
+| RELAY_CONTROL                 | 0x034E      | BOOLEAN | READ_WRITE | ANY      |
+| RELAY_MODE                    | 0x034F      | ENUM    | READ_WRITE | ANY      |
+| TTG                           | 0x0FFE      | NUMERIC | READ_ONLY  | BMV      |
+| SOC                           | 0x0FFF      | NUMERIC | READ_ONLY  | BMV      |
+| SOLAR_ACTIVITY                | 0x2030      | BOOLEAN | READ_ONLY  | MPPT     |
+| TIME_OF_DAY                   | 0x2031      | NUMERIC | READ_ONLY  | MPPT     |
+| AC_OUT_VOLTAGE                | 0x2200      | NUMERIC | READ_ONLY  | INV      |
+| AC_OUT_CURRENT                | 0x2201      | NUMERIC | READ_ONLY  | INV      |
+| AC_OUT_APPARENT_POWER         | 0x2205      | NUMERIC | READ_ONLY  | INV      |
+| SHUTDOWN_LOW_VOLTAGE_SET      | 0x2210      | NUMERIC | READ_WRITE | INV      |
+| VOLTAGE_RANGE_MIN             | 0x2211      | NUMERIC | CONSTANT   | INV      |
+| VOLTAGE_RANGE_MAX             | 0x2212      | NUMERIC | CONSTANT   | INV      |
+| U_AC_OUT_VOLTAGE              | 0x2213      | NUMERIC | READ_ONLY  | MULTI_RS |
+| U_AC_OUT_CURRENT              | 0x2214      | NUMERIC | READ_ONLY  | MULTI_RS |
+| U_AC_OUT_REAL_POWER           | 0x2215      | NUMERIC | READ_ONLY  | MULTI_RS |
+| U_AC_OUT_APPARENT_POWER       | 0x2216      | NUMERIC | READ_ONLY  | MULTI_RS |
+| TWO_WIRE_BMS_INPUT_STATE      | 0xD01F      | BITMASK | READ_ONLY  | MPPT_RS  |
+| REMOTE_INPUT_MODE_CONFIG      | 0xD0C0      | ENUM    | READ_WRITE | MPPT_RS  |
+| U_AC_OUT_CURRENT_MA           | 0xD3A1      | NUMERIC | READ_ONLY  | MULTI_RS |
+| MPPT_TRACKER_MODE_1           | 0xECC3      | ENUM    | READ_ONLY  | MPPT_RS  |
+| PANEL_VOLTAGE_1               | 0xECCB      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| PANEL_POWER_1                 | 0xECCC      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| PANEL_CURRENT_1               | 0xECCD      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| MPPT_TRACKER_MODE_2           | 0xECD3      | ENUM    | READ_ONLY  | MPPT_RS  |
+| PANEL_VOLTAGE_2               | 0xECDB      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| PANEL_POWER_2                 | 0xECDC      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| PANEL_CURRENT_2               | 0xECDD      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| MPPT_TRACKER_MODE_3           | 0xECE3      | ENUM    | READ_ONLY  | MPPT_RS  |
+| PANEL_VOLTAGE_3               | 0xECEB      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| PANEL_POWER_3                 | 0xECEC      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| PANEL_CURRENT_3               | 0xECED      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| MPPT_TRACKER_MODE_4           | 0xECF3      | ENUM    | READ_ONLY  | MPPT_RS  |
+| PANEL_VOLTAGE_4               | 0xECFB      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| PANEL_POWER_4                 | 0xECFC      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| PANEL_CURRENT_4               | 0xECFD      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| BATTERY_RIPPLE_VOLTAGE        | 0xED8B      | NUMERIC | READ_ONLY  | MPPT_RS  |
+| DC_CHANNEL1_VOLTAGE           | 0xED8D      | NUMERIC | READ_ONLY  | ANY      |
+| DC_CHANNEL1_POWER             | 0xED8E      | NUMERIC | READ_ONLY  | BMV      |
+| DC_CHANNEL1_CURRENT           | 0xED8F      | NUMERIC | READ_ONLY  | ANY      |
+| LOAD_OUTPUT_STATE             | 0xEDA8      | BOOLEAN | READ_ONLY  | MPPT     |
+| LOAD_CURRENT                  | 0xEDAD      | NUMERIC | READ_ONLY  | MPPT     |
+| MPPT_TRACKER_MODE             | 0xEDB3      | ENUM    | READ_ONLY  | MPPT     |
+| PANEL_MAXIMUM_VOLTAGE         | 0xEDB8      | NUMERIC | CONSTANT   | MPPT     |
+| PANEL_VOLTAGE                 | 0xEDBB      | NUMERIC | READ_ONLY  | MPPT     |
+| PANEL_POWER                   | 0xEDBC      | NUMERIC | READ_ONLY  | MPPT     |
+| PANEL_CURRENT                 | 0xEDBD      | NUMERIC | READ_ONLY  | MPPT     |
+| PANEL_MAXIMUM_CURRENT         | 0xEDBF      | NUMERIC | CONSTANT   | MPPT_RS  |
+| VOLTAGE_COMPENSATION          | 0xEDCA      | NUMERIC | READ_WRITE | MPPT     |
+| MAXIMUM_POWER_YESTERDAY       | 0xEDD0      | NUMERIC | READ_ONLY  | MPPT     |
+| YIELD_YESTERDAY               | 0xEDD1      | NUMERIC | READ_ONLY  | MPPT     |
+| MAXIMUM_POWER_TODAY           | 0xEDD2      | NUMERIC | READ_ONLY  | MPPT     |
+| YIELD_TODAY                   | 0xEDD3      | NUMERIC | READ_ONLY  | MPPT     |
+| CHARGER_VOLTAGE               | 0xEDD5      | NUMERIC | READ_ONLY  | CHG      |
+| CHARGER_CURRENT               | 0xEDD7      | NUMERIC | READ_ONLY  | CHG      |
+| CHR_ERROR_CODE                | 0xEDDA      | ENUM    | READ_ONLY  | CHG      |
+| CHR_INTERNAL_TEMPERATURE      | 0xEDDB      | NUMERIC | READ_ONLY  | CHG      |
+| USER_YIELD                    | 0xEDDC      | NUMERIC | READ_ONLY  | MPPT     |
+| SYSTEM_YIELD                  | 0xEDDD      | NUMERIC | READ_ONLY  | MPPT     |
+| BAT_LOW_TEMP_LEVEL            | 0xEDE0      | NUMERIC | READ_WRITE | MPPT     |
+| REBULK_VOLTAGE_OFFSET         | 0xEDE2      | NUMERIC | READ_WRITE | MPPT     |
+| EQUALISATION_DURATION         | 0xEDE3      | NUMERIC | READ_WRITE | MPPT     |
+| EQUALISATION_CURRENT_LEVEL    | 0xEDE4      | NUMERIC | READ_WRITE | MPPT     |
+| AUTO_EQUALISE_STOP_ON_VOLTAGE | 0xEDE5      | BOOLEAN | READ_WRITE | MPPT     |
+| LOW_TEMP_CHARGE_CURRENT       | 0xEDE6      | NUMERIC | READ_WRITE | MPPT     |
+| BMS_PRESENT                   | 0xEDE8      | BOOLEAN | READ_WRITE | MPPT     |
+| BAT_VOLTAGE_SETTING           | 0xEDEA      | ENUM    | READ_WRITE | MPPT     |
+| BAT_TEMPERATURE               | 0xEDEC      | NUMERIC | READ_ONLY  | ANY      |
+| BAT_VOLTAGE                   | 0xEDEF      | NUMERIC | READ_ONLY  | MPPT     |
+| BAT_MAX_CURRENT               | 0xEDF0      | NUMERIC | READ_WRITE | MPPT     |
+| BAT_TYPE                      | 0xEDF1      | ENUM    | READ_WRITE | MPPT     |
+| BAT_TEMPERATURE_COMPENSATION  | 0xEDF2      | NUMERIC | READ_WRITE | MPPT     |
+| BAT_EQUALISATION_VOLTAGE      | 0xEDF4      | NUMERIC | READ_WRITE | MPPT     |
+| BAT_FLOAT_VOLTAGE             | 0xEDF6      | NUMERIC | READ_WRITE | MPPT     |
+| BAT_ABSORPTION_VOLTAGE        | 0xEDF7      | NUMERIC | READ_WRITE | MPPT     |
+| BAT_ABSORPTION_LIMIT          | 0xEDFB      | NUMERIC | READ_WRITE | MPPT     |
+| BAT_BULK_LIMIT                | 0xEDFC      | NUMERIC | READ_WRITE | MPPT     |
+| AUTOMATIC_EQUALISATION_MODE   | 0xEDFD      | NUMERIC | READ_WRITE | MPPT     |
+| ADAPTIVE_MODE                 | 0xEDFE      | BOOLEAN | READ_WRITE | MPPT     |
+| DC_MONITOR_MODE               | 0xEEB8      | NUMERIC | READ_ONLY  | BMV71    |
+| ALARM_BUZZER                  | 0xEEFC      | BOOLEAN | READ_WRITE | BMV      |
+
 <!--END REG_DEF_TABLE-->
