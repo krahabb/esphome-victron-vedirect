@@ -75,7 +75,7 @@ void Manager::init_register(Register *hex_register, const REG_DEF *reg_def) {
   if (reg_def->register_id != REG_DEF::REGISTER_UNDEFINED) {
     auto result = this->hex_registers_.emplace(reg_def->register_id, hex_register);
     if (!result.second) {
-      // register_id already present in our set so we must setup/update an RegisterDispatcher
+      // register_id already present in our set so we must setup/update a RegisterDispatcher
       auto &existing_pair = *result.first;
       existing_pair.second = existing_pair.second->cascade_dispatcher_(hex_register);
     }
@@ -87,7 +87,7 @@ void Manager::init_register(Register *entity, REG_DEF::TYPE register_type) {
 #if defined(VEDIRECT_USE_TEXTFRAME)
   auto text_def = TEXT_DEF::find_type(register_type);
   if (text_def)
-    this->text_registers_.emplace(text_def->label, entity);
+    this->emplace_text_register_(text_def->label, entity);
 #endif
 }
 
@@ -158,7 +158,7 @@ void Manager::init_register(Register *entity, const char *label) {
         this->init_register(entity, reg_def);
     }
   }
-  this->text_registers_.emplace(label, entity);
+  this->emplace_text_register_(label, entity);
 }
 #endif  // defined(VEDIRECT_USE_TEXTFRAME)
 
@@ -332,6 +332,14 @@ _forward_to_register:
 void Manager::on_frame_hex_error_(Error error) { ESP_LOGE(this->logtag_, "HEX FRAME: %s", FRAME_ERRORS[error]); }
 #endif  // #if defined(VEDIRECT_USE_HEXFRAME)
 #if defined(VEDIRECT_USE_TEXTFRAME)
+void Manager::emplace_text_register_(const char *label, Register *_register) {
+  auto result = this->text_registers_.emplace(label, _register);
+  if (!result.second) {
+    // label already present in our set so we must setup/update a RegisterDispatcher
+    auto &existing_pair = *result.first;
+    existing_pair.second = existing_pair.second->cascade_dispatcher_(_register);
+  }
+}
 void Manager::on_frame_text_(TextRecord **text_records, uint8_t text_records_count) {
   ESP_LOGD(this->logtag_, "TEXT FRAME: processing");
 
@@ -362,8 +370,8 @@ void Manager::on_frame_text_(TextRecord **text_records, uint8_t text_records_cou
     auto entity_iter = this->text_registers_.find(text_record->name);
     if (entity_iter == this->text_registers_.end()) {
       if (this->auto_create_text_entities_) {
-        ESP_LOGD(this->logtag_, "Auto-Creating entity for VE.Direct text field: %s", text_record->name);
-        Register *hex_register;
+        ESP_LOGD(this->logtag_, "Auto-Creating TEXT register: %s", text_record->name);
+        Register *_register;
         const char *label;
         auto text_def = TEXT_DEF::find_label(text_record->name);
         if (text_def) {
@@ -371,19 +379,20 @@ void Manager::on_frame_text_(TextRecord **text_records, uint8_t text_records_cou
           // check if we have an already defined matching hex register
           auto reg_def = REG_DEF::find_type(text_def->register_type);
           if (reg_def) {
-            hex_register = this->get_hex_register_(reg_def->register_id, true);
+            _register = this->get_hex_register_(reg_def->register_id, true);
           } else {
-            hex_register = Register::BUILD_ENTITY_FUNC[Register::TextSensor](this, label, label);
+            _register = Register::BUILD_ENTITY_FUNC[Register::TextSensor](this, label, label);
           }
         } else {
           // We lack the definition for this TEXT RECORD so
           // we return a plain TextSensor entity.
           // We allocate a copy since the label param is 'volatile'
           label = strdup(text_record->name);
-          hex_register = Register::BUILD_ENTITY_FUNC[Register::TextSensor](this, label, label);
+          _register = Register::BUILD_ENTITY_FUNC[Register::TextSensor](this, label, label);
         }
-        this->text_registers_.emplace(label, hex_register);
-        hex_register->parse_text(text_record->value);
+        // no need to check for cascading -> emplace straight
+        this->text_registers_.emplace(label, _register);
+        _register->parse_text(text_record->value);
       }
     } else {
       entity_iter->second->parse_text(text_record->value);
@@ -399,7 +408,7 @@ Register *Manager::get_hex_register_(register_id_t register_id, bool create) {
   auto entity_iter = this->hex_registers_.find(register_id);
   if (entity_iter == this->hex_registers_.end()) {
     if (create) {
-      ESP_LOGD(this->logtag_, "Auto-Creating entity for VE.Direct hex register: %04X", (int) register_id);
+      ESP_LOGD(this->logtag_, "Auto-Creating HEX register: %04X", (int) register_id);
       Register *hex_register;
       auto reg_def = REG_DEF::find_register_id(register_id);
       if (reg_def) {

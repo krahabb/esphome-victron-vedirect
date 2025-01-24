@@ -231,10 +231,14 @@ class Manager : public uart::UARTDevice, public Component, protected FrameHandle
   // data while parsing.
   typedef std::unordered_map<const char *, Register *, cstring_hash, cstring_eq> text_registers_t;
   text_registers_t text_registers_;
+  void emplace_text_register_(const char *label, Register *_register);
 
   void on_frame_text_(TextRecord **text_records, uint8_t text_records_count) override;
   void on_frame_text_error_(Error error) override;
 #endif
+
+  // These structures, should only be conditionally compiled with VEDIRECT_USE_HEXFRAME
+  // but are also helping auto-creation of TEXT registers so we'll leave them.
   typedef std::unordered_map<register_id_t, Register *> hex_registers_t;
   hex_registers_t hex_registers_;
 

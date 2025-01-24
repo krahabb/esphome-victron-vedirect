@@ -126,49 +126,55 @@ class NumericRegister {
   float hex_scale_{1.};
 };
 
-/// @brief This class provides hexframe dispatching to multiple Registers when more than
-/// one are interested in parsing incoming data for the same register address. This is
-/// installed in the Manager.hex_registers_ collection in place of a single Register so
-/// that it'll be able to dispatch frame data to multiple entities/registers.
+/// @brief This class provides on-demand frame dispatching to multiple registers with the same
+/// HEX address and/or TEXT label. This is installed in the Manager.hex_registers_ collection
+/// when needed so that it'll be able to dispatch frame data to multiple registers.
 class RegisterDispatcher final : public Register {
  public:
   friend class Register;
 #if defined(VEDIRECT_USE_HEXFRAME) && defined(VEDIRECT_USE_TEXTFRAME)
-  RegisterDispatcher(Register *hex_register) : Register(parse_hex_default_, parse_text_empty_) {
+  RegisterDispatcher(Register *_register) : Register(parse_hex_default_, parse_text_default_) {
     // We'll just use the first register's reg_def_ as our own.
     // Be careful since these could be quite different REG_DEFs except their register_id
-    this->reg_def_ = hex_register->reg_def_;
-    this->hex_registers_.push_back(hex_register);
+    this->reg_def_ = _register->reg_def_;
+    this->registers_.push_back(_register);
   }
 #elif defined(VEDIRECT_USE_HEXFRAME)
-  RegisterDispatcher(Register *hex_register) : Register(parse_hex_default_) {
-    this->reg_def_ = hex_register->reg_def_;
-    this->hex_registers_.push_back(hex_register);
+  RegisterDispatcher(Register *_register) : Register(parse_hex_default_) {
+    this->reg_def_ = _register->reg_def_;
+    this->registers_.push_back(_register);
   }
 #elif defined(VEDIRECT_USE_TEXTFRAME)
-  RegisterDispatcher(Register *hex_register) : Register(parse_text_empty_) {
-    this->reg_def_ = hex_register->reg_def_;
-    this->hex_registers_.push_back(hex_register);
+  RegisterDispatcher(Register *_register) : Register(parse_text_default_) {
+    this->reg_def_ = _register->reg_def_;
+    this->registers_.push_back(_register);
   }
 #endif
  protected:
-  std::vector<Register *> hex_registers_;
+  std::vector<Register *> registers_;
 
   void link_disconnected_() override {
-    for (auto hex_register : this->hex_registers_) {
-      hex_register->link_disconnected_();
+    for (auto _register : this->registers_) {
+      _register->link_disconnected_();
     }
   }
 
-  Register *cascade_dispatcher_(Register *hex_register) override {
-    this->hex_registers_.push_back(hex_register);
+  Register *cascade_dispatcher_(Register *_register) override {
+    this->registers_.push_back(_register);
     return this;
   }
 
 #if defined(VEDIRECT_USE_HEXFRAME)
   static void parse_hex_default_(Register *hex_register, const RxHexFrame *hex_frame) {
-    for (auto hex_register : static_cast<RegisterDispatcher *>(hex_register)->hex_registers_) {
-      hex_register->parse_hex(hex_frame);
+    for (auto _register : static_cast<RegisterDispatcher *>(hex_register)->registers_) {
+      _register->parse_hex(hex_frame);
+    }
+  }
+#endif
+#if defined(VEDIRECT_USE_TEXTFRAME)
+  static void parse_text_default_(Register *hex_register, const char *text_value) {
+    for (auto _register : static_cast<RegisterDispatcher *>(hex_register)->registers_) {
+      _register->parse_text(text_value);
     }
   }
 #endif
