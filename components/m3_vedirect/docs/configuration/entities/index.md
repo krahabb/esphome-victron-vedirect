@@ -1,12 +1,12 @@
 ---
 title: Entities
 parent: Configuration
-nav_order: 0
+nav_order: 2
 ---
 
 ## Introduction
 
-In order to configure entities for the component, we need to understand the characteristics of the VEDirect interface. In general, beside all the low level framing and signals, the communication channel transfers informations about the device through a set of so called ['registers']({% link configuration/entities/registers.md %}) where each is identified by a 16 bit address and represents either a measured value (current, voltage, etc), a state (alarms, warnings, etc), a configuration (bulk voltage, maximum current, etc) or simple static informations like device serial number or firmware version.
+In order to configure entities for the component, we need to understand the characteristics of the VEDirect interface. In general, beside all the low level framing and signals, the communication channel transfers informations about the device through a set of so called ['registers']({% link configuration/registers.md %}) where each is identified by a 16 bit address and represents either a measured value (current, voltage, etc), a state (alarms, warnings, etc), a configuration (bulk voltage, maximum current, etc) or simple static informations like device serial number or firmware version.
 These informations are generally carried over HEX frames where you can query/set device registers by address and, for a limited set of measures, states, infos, they're also carried over TEXT frames so that some values/registers are available in both framing layers. The difference is that TEXT frames are automatically broadcasted by the device and you can't decide what's in it. Every 1 second (or so) the device transmits a full TEXT frame containing a (fixed) subset of it's registers (this set has been decided by Victron designers and it is usually enough to monitor the device state in real time). Different device fw versions and/or device families have (or could have) different sets of registers exposed and this is all documented [here](https://www.victronenergy.com/upload/documents/VE.Direct-Protocol-3.33.pdf).
 
 {: .highlight}
@@ -56,7 +56,7 @@ This sample config will create a numeric `sensor` in EspHome binded to the devic
   > `address` and `text_label` are both optional meaning you can use either or both in order to bind the entity to the corrisponding protocol frame. Some registers are available in both TEXT and HEX frames and you might want to bind those 2 layers (protocols) of data to the same entity in EspHome (by specifying both keys). This way the entity will be updated whenever each of the data will enter the component. If you just set `address` you're only binding this entity to the data exchanged over the HEX framing. If you just set `text_label` you're only binding this entity to the data coming from the TEXT protocol layer. You can also decide to configure 2 entities for the same register: one binded to the HEX address and the other binded to the text record NAME (and see if they differ or not!)
 
   - `data_type` (optional - enum): Here you specify the data size/type of the HEX register frame. Every register has its own structure/layout and this can be checked out in the official docs. If left unset, the component will try to extract the correct size from the received payload but this can lead to misinterpretations of data (for `numeric` registers the data type, beside the length, also sets the signed/unsigned property of the numeric value).
-  - `numeric` (optional - enum): This mapping sets the 'CLASS' for the register i.e. its semantics. See [Registers]({% link configuration/entities/registers.md %}) for a complete explanation of the concept. Here we're just considering configuration of register VE_REG_DC_CHANNEL1_CURRENT which needs some info in order to be correctly parsed/rendered. We have:
+  - `numeric` (optional - enum): This mapping sets the 'CLASS' for the register i.e. its semantics. See [Registers]({% link configuration/registers.md %}) for a complete explanation of the concept. Here we're just considering configuration of register VE_REG_DC_CHANNEL1_CURRENT which needs some info in order to be correctly parsed/rendered. We have:
 
     - `scale` (optional - numeric/enum - default: 1): This is the scale factor used to multiply the incoming raw data from HEX frames (encoded as `data_type`) to the final numeric value for the sensor state. Again, check the Victron docs for cues about registers encoding.
     - `text_scale` (optional - numeric/enum - default: `scale`): Same as the `scale` option but here we're setting the conversion factor for data coming from a TEXT frame. This is usually different than the one used for HEX frames related to the same register.

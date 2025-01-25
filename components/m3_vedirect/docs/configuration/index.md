@@ -30,6 +30,7 @@ m3_vedirect:
 
 This is a simple snippet where we're going to setup the needed `uart` component which, depending on the platform (ESP8266,ESP32,HOST) might have different options.
 The `m3_vedirect` component has this configuration options available:
+
 - `id` (required): used to refer to this component when configuring entities for EspHome.
 - `uart_id` (required): the `id` of the uart component to be linked to this.
 - `name` (optional - string): This string is prepended to the entity name when an entity is dynamically built by the component (see `auto_create_entities`). Could be left empty, but if you have more than one m3_vedirect component per EspHome node you could use this to distinguish auto created entities related to different VEDirect devices.
@@ -40,5 +41,4 @@ The `m3_vedirect` component has this configuration options available:
   - `auto_create_entities` (optional - boolean - default: false): Same option as for `textframe`. Whenever an HEX register data is received, either broadcasted or by being queried, the component will build an entity to represent the value. Again, this entity might be a very specific one (binary_sensor, switch, sensor, number, etc) if the component has 'knowledge' through an embedded register definition or might be a plain text_sensor which will just expose the data in generic hex format (useful for debugging/reverse engineering).
   - `ping_timeout` (optional - duration - default: 1min): The component could cyclically send PINGs to the device to keep the HEX frame layer active (see official Victron docs). To disable this feature set a timeout of `0`
 
-
-Now, having configured the main component is just the first step. To make it useful by exposing data through entities see the next [chapter]({% link configuration/entities/index.md %}).
+Now, having configured the main component is just the first step. To make it useful by exposing data through entities see the next [chapter]({% link configuration/registers.md %}).

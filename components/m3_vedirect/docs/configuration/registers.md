@@ -1,8 +1,15 @@
 ---
 title: Registers
-parent: Entities
+parent: Configuration
 nav_order: 1
 ---
+
+[binary_sensor]: {% link configuration/entities/binary_sensor.md %}
+[number]: {% link configuration/entities/number.md %}
+[select]: {% link configuration/entities/select.md %}
+[sensor]: {% link configuration/entities/sensor.md %}
+[text_sensor]: {% link configuration/entities/text_sensor.md %}
+[switch]: {% link configuration/entities/switch.md %}
 
 ## About VEDirect registers
 
@@ -41,39 +48,39 @@ There are 5 classes defined. Each class defines how to interpret the data and us
 
 VEDirect registers can be read-only or writable and this impacts which entity platform you should use to manage the register. In general you should follow this table:
 
-| ACCESS       | Suggested entity platform                                                  |
-| ------------ | -------------------------------------------------------------------------- |
-| `READ_ONLY`  | [binary_sensor](binary_sensor),[sensor](sensor),[text_sensor](text_sensor) |
-| `READ_WRITE` | [number](number),[select](select),[switch](switch)                         |
+| ACCESS       | Suggested entity platform              |
+| ------------ | -------------------------------------- |
+| `READ_ONLY`  | [binary_sensor],[sensor],[text_sensor] |
+| `READ_WRITE` | [number],[select],[switch]             |
 
 The component uses this property internally (defined in flavors REG_DEFs) to decide which entity type to automatically instantiate when using [`auto_create_entities`]({% link configuration/index.md %}) option while there's no place to use it when manually defining entities configuration since the 'writability' is naturally implied by the entity type.
 For example, you're still allowed to use a `number` entity to try writing into a `READ_ONLY` register but it'll likely end up in a frame error reply from the device.
 
 This table summarizes the allowed bindings between a register CLASS definition and an entity platform. Details on how to configure these bindings are in the relevant platform documentation.
 
-| Entity platform                | Supported CLASSes           |
-| ------------------------------ | --------------------------- |
-| [binary_sensor](binary_sensor) | `BOOLEAN`, `BITMASK`,`ENUM` |
-| [number](number)               | `NUMERIC`                   |
-| [select](select)               | `ENUM`                      |
-| [sensor](sensor)               | `NUMERIC`                   |
-| [switch](switch)               | `BOOLEAN`, `BITMASK`,`ENUM` |
-| [text_sensor](text_sensor)     | `BITMASK`,`ENUM`, `STRING`  |
+| Entity platform | Supported CLASSes           |
+| --------------- | --------------------------- |
+| [binary_sensor] | `BOOLEAN`, `BITMASK`,`ENUM` |
+| [number]        | `NUMERIC`                   |
+| [select]        | `ENUM`                      |
+| [sensor]        | `NUMERIC`                   |
+| [switch]        | `BOOLEAN`, `BITMASK`,`ENUM` |
+| [text_sensor]   | `BITMASK`,`ENUM`, `STRING`  |
 
 The following table summarizes the 'suggesteds/natural' binding relations between registers and entities:
 
-| CLASS     | ACCESS       | Suggested entity platform                                  |
-| --------- | ------------ | ---------------------------------------------------------- |
-| `BITMASK` | `READ_ONLY`  | [binary_sensor](binary_sensor), [text_sensor](text_sensor) |
-|           | `READ_WRITE` | [switch](switch)                                           |
-| `BOOLEAN` | `READ_ONLY`  | [binary_sensor](binary_sensor)                             |
-|           | `READ_WRITE` | [switch](switch)                                           |
-| `ENUM`    | `READ_ONLY`  | [text_sensor](text_sensor)                                 |
-|           | `READ_WRITE` | [select](select)                                           |
-| `NUMERIC` | `READ_ONLY`  | [sensor](sensor)                                           |
-|           | `READ_WRITE` | [number](number)                                           |
-| `STRING`  | `READ_ONLY`  | [text_sensor](text_sensor)                                 |
-|           | `READ_WRITE` | no support (likely not implemented in VEDirect too)        |
+| CLASS     | ACCESS       | Suggested entity platform                           |
+| --------- | ------------ | --------------------------------------------------- |
+| `BITMASK` | `READ_ONLY`  | [binary_sensor], [text_sensor]                      |
+|           | `READ_WRITE` | [switch]                                            |
+| `BOOLEAN` | `READ_ONLY`  | [binary_sensor]                                     |
+|           | `READ_WRITE` | [switch]                                            |
+| `ENUM`    | `READ_ONLY`  | [text_sensor]                                       |
+|           | `READ_WRITE` | [select]                                            |
+| `NUMERIC` | `READ_ONLY`  | [sensor]                                            |
+|           | `READ_WRITE` | [number]                                            |
+| `STRING`  | `READ_ONLY`  | [text_sensor]                                       |
+|           | `READ_WRITE` | no support (likely not implemented in VEDirect too) |
 
 ## Summary
 

@@ -1,7 +1,7 @@
 ---
 title: Register definitions and Flavors
 parent: Configuration
-nav_order: 5
+nav_order: 15
 ---
 
 ## Register definitions
@@ -83,6 +83,7 @@ sensor:
 The register `PANEL_VOLTAGE` has `flavor` == `MPPT` so, in order to not incur a config/compilation error you'd have to at least set `flavor: [MPPT]` in component configuration.
 
 The following is the full list of actually defined registers together with their relevant properties:
+
 <!--BEGIN REG_DEF_TABLE-->
 
 | register                      | hex address | class   | r/w        | flavor   |
