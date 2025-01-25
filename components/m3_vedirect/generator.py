@@ -157,7 +157,9 @@ def generate_docs():
             )
 
             if doc_dst != doc_src:
-                with open(doc_filename, mode="w", encoding="utf-8") as doc_file:
+                with open(
+                    doc_filename, mode="w", encoding="utf-8", newline="\n"
+                ) as doc_file:
                     doc_file.write(doc_dst)
 
     def generate_sample_config(flavor: str):
@@ -251,7 +253,7 @@ def generate_docs():
                     )
 
         with open(
-            FLAVOR_EXAMPLE % flavor, mode="w", encoding="utf-8"
+            FLAVOR_EXAMPLE % flavor, mode="w", encoding="utf-8", newline="\n"
         ) as flavor_example_file:
             flavor_example_file.write(flavor_example)
 
@@ -343,7 +345,7 @@ if __name__ == "__main__":
         )
         os.chdir(vedirect_path)
 
-    with open(VE_REG_PY, mode="w", encoding="utf-8") as ve_reg_py:
+    with open(VE_REG_PY, mode="w", encoding="utf-8", newline="\n") as ve_reg_py:
         generate()
 
     # Here we'll use the generated ve_reg.py to build some docs
