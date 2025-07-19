@@ -147,7 +147,7 @@ void Select::publish_enum_(ENUM_DEF::enum_t enum_value) {
 void Select::publish_state_(const std::string &state, size_t index) {
   // our custom publish_state doesn't really care if the index is correct or not since esphome
   // discards it anyway when broadcasting through api
-  this->has_state_ = true;
+  this->set_has_state(true);
   this->state = state;
   ESP_LOGD(TAG, "'%s': Sending state %s (index %zu)", this->get_name().c_str(), state.c_str(), index);
   this->state_callback_.call(state, index);
