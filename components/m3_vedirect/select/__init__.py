@@ -1,7 +1,7 @@
 from esphome import automation
 import esphome.codegen as cg
 from esphome.components import mqtt, select, web_server
-from esphome.cpp_helpers import setup_entity
+from esphome.core.entity_helpers import setup_entity
 
 from .. import VEDirectPlatform, ve_reg
 
@@ -22,7 +22,7 @@ async def _register_select(var, config):
     """
     # await select.register_select(var, config, options=[])
     cg.add(cg.App.register_select(var))
-    await setup_entity(var, config)
+    await setup_entity(var, config, "select")
 
     for conf in config.get(select.CONF_ON_VALUE, []):
         trigger = cg.new_Pvariable(conf[select.CONF_TRIGGER_ID], var)
