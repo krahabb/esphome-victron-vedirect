@@ -1,9 +1,12 @@
 from esphome import automation
 import esphome.codegen as cg
+import esphome.config_validation as cv
 from esphome.components import mqtt, select, web_server
-from esphome.core.entity_helpers import setup_entity
+from esphome.const import __version__
 
 from .. import VEDirectPlatform, ve_reg
+
+ESPHOME_VERSION = cv.Version.parse(__version__)
 
 PLATFORM = VEDirectPlatform(
     "select",
@@ -22,7 +25,13 @@ async def _register_select(var, config):
     """
     # await select.register_select(var, config, options=[])
     cg.add(cg.App.register_select(var))
-    await setup_entity(var, config, "select")
+
+    if ESPHOME_VERSION >= cv.Version(2025,7,0):
+        from esphome.core.entity_helpers import setup_entity
+        await setup_entity(var, config, "select")
+    else:
+        from esphome.cpp_helpers import setup_entity
+        await setup_entity(var, config)
 
     for conf in config.get(select.CONF_ON_VALUE, []):
         trigger = cg.new_Pvariable(conf[select.CONF_TRIGGER_ID], var)

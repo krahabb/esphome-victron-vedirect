@@ -1,5 +1,6 @@
 #include "select.h"
 #include "esphome/core/application.h"
+#include "esphome/core/version.h"
 #ifdef USE_API
 #include "esphome/components/api/api_server.h"
 #endif
@@ -147,7 +148,11 @@ void Select::publish_enum_(ENUM_DEF::enum_t enum_value) {
 void Select::publish_state_(const std::string &state, size_t index) {
   // our custom publish_state doesn't really care if the index is correct or not since esphome
   // discards it anyway when broadcasting through api
-  this->set_has_state(true);
+  #if ESPHOME_VERSION_CODE >= VERSION_CODE(2025,6,0)
+    this->set_has_state(true);
+  #else
+    this->has_state_ = true;
+  #endif
   this->state = state;
   ESP_LOGD(TAG, "'%s': Sending state %s (index %zu)", this->get_name().c_str(), state.c_str(), index);
   this->state_callback_.call(state, index);
