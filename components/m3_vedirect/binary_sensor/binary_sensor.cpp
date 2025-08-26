@@ -1,5 +1,6 @@
 #include "binary_sensor.h"
 #include "esphome/core/application.h"
+#include "esphome/core/version.h"
 #ifdef USE_API
 #include "esphome/components/api/api_server.h"
 #endif
@@ -16,8 +17,14 @@ Register *BinarySensor::build_entity(Manager *manager, const char *name, const c
   Register::dynamic_init_entity_(entity, name, object_id, manager->get_vedirect_name(), manager->get_vedirect_id());
   App.register_binary_sensor(entity);
 #ifdef USE_API
-  if (api::global_api_server)
+  if (api::global_api_server) {
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 7, 0)
     entity->add_on_state_callback([entity](bool state) { api::global_api_server->on_binary_sensor_update(entity); });
+#else
+    entity->add_on_state_callback(
+        [entity](bool state) { api::global_api_server->on_binary_sensor_update(entity, state); });
+#endif
+  }
 #endif
   return entity;
 }

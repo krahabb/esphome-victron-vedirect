@@ -8,6 +8,7 @@ import esphome.codegen as cg
 from esphome.components import uart
 import esphome.config_validation as cv
 import esphome.const as ec
+from esphome.core import CORE
 import esphome.cpp_generator as cpp
 
 from . import ve_reg
@@ -16,6 +17,7 @@ CODEOWNERS = ["@krahabb"]
 DEPENDENCIES = ["uart"]
 MULTI_CONF = True
 
+ESPHOME_VERSION = cv.Version.parse(ec.__version__)
 
 ENUM_DEF_struct = ve_reg.ns.struct("ENUM_DEF")
 ENUM_DEF_LOOKUP_DEF_struct = ENUM_DEF_struct.struct("LOOKUP_DEF")
@@ -402,6 +404,35 @@ class VEDirectPlatform:
                 entity = await self.new_base_entity(entity_config)
                 cg.add(getattr(manager, f"set_{entity_key}")(entity))
 
+        if cv.Version(2025, 8, 0) <= ESPHOME_VERSION:
+            # Platforms entities vectors are now statically pre-allocated so we have
+            # to tell EspHome core how many entities we want. This is especially needed for dynamically
+            # allocated ones since we don't know the number at config time ;)
+            _dynamic_entities_count = (
+                1  # ensure at least 1 slot whatever the config for little safety
+            )
+            # Config for dynamic entities is set at the manager component level.
+            # We provide default values when 'auto_create_entities' is set with a
+            # bool value (legacy validator)
+            for _key, _default_entities_count in {
+                CONF_HEXFRAME: 100,
+                CONF_TEXTFRAME: 32,
+            }.items():
+                try:
+                    _count_or_bool = MANAGERS_CONFIG[config[CONF_VEDIRECT_ID]][_key][
+                        CONF_AUTO_CREATE_ENTITIES
+                    ]
+                    _dynamic_entities_count += (
+                        _default_entities_count
+                        if _count_or_bool is True
+                        else int(_count_or_bool)
+                    )
+                except KeyError:
+                    pass
+            # BEWARE: we should loop on this api but we take the direct path
+            # CORE.register_platform_component(self.snake_name, None)
+            CORE.platform_counts[self.snake_name] += _dynamic_entities_count
+
 
 # main component (Manager) schema
 MANAGERS_CONFIG = {}
@@ -429,12 +460,16 @@ CONFIG_SCHEMA = (
             ): cv.ensure_list(validate_str_enum(ve_reg.Flavor)),
             cv.Optional(CONF_TEXTFRAME): cv.Schema(
                 {
-                    cv.Optional(CONF_AUTO_CREATE_ENTITIES): cv.boolean,
+                    cv.Optional(CONF_AUTO_CREATE_ENTITIES): cv.Any(
+                        cv.boolean, cv.positive_int
+                    ),
                 }
             ),
             cv.Optional(CONF_HEXFRAME): cv.Schema(
                 {
-                    cv.Optional(CONF_AUTO_CREATE_ENTITIES): cv.boolean,
+                    cv.Optional(CONF_AUTO_CREATE_ENTITIES): cv.Any(
+                        cv.boolean, cv.positive_int
+                    ),
                     cv.Optional(CONF_PING_TIMEOUT): cv.positive_time_period_seconds,
                     cv.Optional(CONF_ON_FRAME_RECEIVED): automation.validate_automation(
                         {
