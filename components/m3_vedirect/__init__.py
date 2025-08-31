@@ -233,6 +233,9 @@ def deflate_flavors(flavors: typing.Iterable):
 class VEDirectPlatform:
     COMPONENT_NS: typing.Final = m3_vedirect_ns
 
+    RegisterEntityT = typing.Callable[[typing.Any, typing.Any], typing.Awaitable[None]]
+    register_entity: RegisterEntityT
+
     CustomEntityDef = namedtuple("CustomEntityDef", ("schema", "define"))
 
     def __init__(
@@ -247,6 +250,8 @@ class VEDirectPlatform:
         ],  # vedirect classes supported by this platform
         vedirect_has_text: bool,  # indicates if this platform supports entities for the TEXT frames
         *vedirect_schemas,  # extra schemas added to base vedirect_schema
+        register_entity: RegisterEntityT
+        | None = None,  # optional custom register_entity function
     ):
         self.snake_name = snake_name
         self.class_name = "".join([p.capitalize() for p in snake_name.split("_")])
@@ -255,7 +260,7 @@ class VEDirectPlatform:
             self.class_name, getattr(base_module, self.class_name)
         )
         # grab some symbols from the base platform
-        self.register_entity: typing.Callable = getattr(
+        self.register_entity = register_entity or getattr(
             base_module, f"register_{snake_name}"
         )
         self.new_base_entity: typing.Callable = getattr(

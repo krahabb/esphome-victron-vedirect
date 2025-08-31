@@ -5,19 +5,6 @@ import esphome.const as ec
 
 from .. import VEDirectPlatform, ve_reg
 
-PLATFORM = VEDirectPlatform(
-    "number",
-    number,
-    {},
-    (ve_reg.CLASS.NUMERIC,),
-    False,
-    {
-        cv.Optional(ec.CONF_MIN_VALUE): cv.float_,
-        cv.Optional(ec.CONF_MAX_VALUE): cv.float_,
-        cv.Optional(ec.CONF_STEP): cv.positive_float,
-    },
-)
-
 
 async def _register_number(var, config):
     await number.register_number(
@@ -29,7 +16,19 @@ async def _register_number(var, config):
     )
 
 
-PLATFORM.register_entity = _register_number
+PLATFORM = VEDirectPlatform(
+    "number",
+    number,
+    {},
+    (ve_reg.CLASS.NUMERIC,),
+    False,
+    {
+        cv.Optional(ec.CONF_MIN_VALUE): cv.float_,
+        cv.Optional(ec.CONF_MAX_VALUE): cv.float_,
+        cv.Optional(ec.CONF_STEP): cv.positive_float,
+    },
+    register_entity=_register_number,
+)
 
 CONFIG_SCHEMA = PLATFORM.CONFIG_SCHEMA
 
