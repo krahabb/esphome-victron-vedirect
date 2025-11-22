@@ -9,18 +9,27 @@
 namespace esphome {
 namespace m3_vedirect {
 
-Register *Number::build_entity(Manager *manager, const char *name, const char *object_id) {
+Register *Number::build_entity(Manager *manager, const REG_DEF *reg_def, const char *name) {
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 8, 0)
+  if (App.get_numbers().size() >= ESPHOME_ENTITY_NUMBER_COUNT) {
+    return Register::drop_platform(manager, Platform::Number);
+  }
+#endif
   auto entity = new Number(manager);
-  Register::dynamic_init_entity_(entity, name, object_id, manager->get_vedirect_name(), manager->get_vedirect_id());
+  manager->init_entity(entity, reg_def, name);
   App.register_number(entity);
 #ifdef USE_API
-  if (api::global_api_server)
-    entity->add_on_state_callback([entity](float state) { api::global_api_server->on_number_update(entity, state); });
+  entity->add_on_state_callback([entity](float state) { api::global_api_server->on_number_update(entity, state); });
 #endif
   return entity;
 }
 
-void Number::link_disconnected_() { this->publish_state(NAN); }
+void Number::link_disconnected_() {
+  if (this->has_state()) {
+    this->publish_state(NAN);
+    this->set_has_state(false);
+  }
+}
 
 void Number::init_reg_def_() {
   auto reg_def = this->reg_def_;
@@ -50,26 +59,21 @@ void Number::init_reg_def_() {
 void Number::control(float value) {
   // Assuming 'value' is not out of range of the underlying data type, this code
   // should work for both signed/unsigned quantities
-  int native_value = std::roundf(value / this->hex_scale_);
-  this->manager->request(HEXFRAME::COMMAND::Set, this->reg_def_->register_id, &native_value, this->reg_def_->data_type,
-                         request_callback_, this);
+  this->request_set_((int) std::roundf(value / this->hex_scale_), [this](const HexFrame *frame, uint8_t error) {
+    if (error) {
+      // Error or timeout..resend actual state since it looks like HA esphome does optimistic
+      // updates in it's HA entity instance...
+      this->publish_state(this->state);
+    } else {
+      // Invalidate our state so that the subsequent dispatching/parsing goes through
+      // an effective publish_state. This is needed (again) since the frontend already
+      // optimistically updated the entity to the new value but even in case of success,
+      // the device might 'force' a different setting if the request was for an unsupported
+      // value
+      this->state = NAN;
+    }
+  });
 };
-
-void Number::request_callback_(void *callback_param, const RxHexFrame *hex_frame) {
-  Number *_number = reinterpret_cast<Number *>(callback_param);
-  if (!hex_frame || (hex_frame && hex_frame->flags())) {
-    // Error or timeout..resend actual state since it looks like HA esphome does optimistic
-    // updates in it's HA entity instance...
-    _number->publish_state(_number->state);
-  } else {
-    // Invalidate our state so that the subsequent dispatching/parsing goes through
-    // an effective publish_state. This is needed (again) since the frontend already
-    // optimistically updated the entity to the new value but even in case of success,
-    // the device might 'force' a different setting if the request was for an unsupported
-    // value
-    _number->state = NAN;
-  }
-}
 
 void Number::parse_hex_default_(Register *hex_register, const RxHexFrame *hex_frame) {
   Number *number = static_cast<Number *>(hex_register);

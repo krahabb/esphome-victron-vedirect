@@ -1,16 +1,17 @@
 #pragma once
 
-#include "esphome/core/entity_base.h"
-
 #include "defines.h"
 #include "ve_reg_frame.h"
+#include "containers.h"
 
+#include <functional>
 #include <vector>
 
 namespace esphome {
 namespace m3_vedirect {
 
-class Register {
+/// @brief Base class for all VEDirect registers/entities.
+class Register : public ValueBucket<register_id_t, Register> {
  public:
   friend class Manager;
   friend class RegisterDispatcher;
@@ -25,10 +26,10 @@ class Register {
   // through yaml generation, the generator will also add a registration
   // for the corresponding entity 'build_entity' function so that the Manager
   // will be able to instantiate the correct entity. By default, we setup a
-  // build function for a plain base 'Entity' object for every specialized type
+  // build function for a plain base 'Register' object for every specialized type
   // so that the Manager will always instantiate an object (which will have no
   // behavior other than working as a stub in this case).
-  typedef Register *(*build_entity_func_t)(Manager *manager, const char *name, const char *object_id);
+  typedef Register *(*build_entity_func_t)(Manager *manager, const REG_DEF *reg_def, const char *name);
   enum Platform {
     BinarySensor,
     Number,
@@ -38,19 +39,32 @@ class Register {
     TextSensor,
     Platform_COUNT,
   };
-  static void register_platform(Platform platform, build_entity_func_t build_entity_func) {
-    BUILD_ENTITY_FUNC[platform] = build_entity_func;
-  }
 
-  // Called by Manager initializer (should just be called once but no harm if multiple invocations)
-  // This will 'fix' missing platforms registration by filling in with the most appropriate
-  // build_entity_func_t for the case.
-  static void update_platforms();
+ private:
+  /// @brief Maps a platform to a factory function for building an entity of that platform.
+  /// If a platform is not registered, we will try to
+  /// substitute it with the most appropriate available platform
+  static build_entity_func_t BUILD_ENTITY_FUNC[Platform_COUNT];
+  /// @brief Maps a 'register definition' (through REG_DEF::CLASS and REG_DEF::ACCESS)
+  /// to the most appropriate Platform factory function.
+  static const Platform REGDEF_FACTORY_MAP[REG_DEF::CLASS::CLASS_COUNT][REG_DEF::ACCESS::ACCESS_COUNT];
+
+  /// @brief Builds an entity based off the provided register definition
+  /// using the most appropriate platform available.
+  /// This is used by the Manager when dynamically creating entities
+  /// based off the register definitions (REG_DEF::DEFS).
+  /// @param reg_def: the register definition to be used for building the entity
+  /// @return a new entity of the most appropriate platform or a plain Register.
+  static Register *auto_create(Manager *manager, const REG_DEF *reg_def);
+
+ public:
+  /// @brief Default build function for a plain Register object.
+  /// This (or a more specific platform version) is used to build a specific entity/register
+  /// when the corresponding platform is requested when dynamically creating entities (see
+  /// Manager::get_register).
+  static Register *build_entity(Manager *manager, const REG_DEF *reg_def, const char *name) { return new Register(); }
 
   const REG_DEF *get_reg_def() const { return this->reg_def_; }
-  register_id_t get_register_id() const {
-    return this->reg_def_ ? this->reg_def_->register_id : REG_DEF::REGISTER_UNDEFINED;
-  }
 
 #if defined(VEDIRECT_USE_HEXFRAME)
   typedef FrameHandler::RxHexFrame RxHexFrame;
@@ -63,20 +77,15 @@ class Register {
 #endif
 
  protected:
-  static build_entity_func_t BUILD_ENTITY_FUNC[Platform_COUNT];
-  static Register *build_entity(Manager *manager, const char *name, const char *object_id) { return new Register(); }
-  // Called by the actual platform implementation to setup its EntityBase properties
-  static void dynamic_init_entity_(EntityBase *entity, const char *name, const char *object_id,
-                                   const char *manager_name, const char *manager_id);
+  const REG_DEF *reg_def_{nullptr};
 
-  const REG_DEF *reg_def_;
 #if defined(VEDIRECT_USE_HEXFRAME) && defined(VEDIRECT_USE_TEXTFRAME)
   Register(parse_hex_func_t parse_hex_func = parse_hex_empty_, parse_text_func_t parse_text_func = parse_text_empty_)
-      : reg_def_(nullptr), parse_hex_(parse_hex_func), parse_text_(parse_text_func) {}
+      : parse_hex_(parse_hex_func), parse_text_(parse_text_func) {}
 #elif defined(VEDIRECT_USE_HEXFRAME)
-  Register(parse_hex_func_t parse_hex_func = parse_hex_empty_) : reg_def_(nullptr), parse_hex_(parse_hex_func) {}
+  Register(parse_hex_func_t parse_hex_func = parse_hex_empty_) : parse_hex_(parse_hex_func) {}
 #elif defined(VEDIRECT_USE_TEXTFRAME)
-  Register(parse_text_func_t parse_text_func = parse_text_empty_) : reg_def_(nullptr), parse_text_(parse_text_func) {}
+  Register(parse_text_func_t parse_text_func = parse_text_empty_) : parse_text_(parse_text_func) {}
 #endif
 
   // called by the Manager when VEDirect timeouts (we'll send 'unknown' to APIServer)
@@ -92,7 +101,7 @@ class Register {
   virtual void parse_enum_(ENUM_DEF::enum_t enum_value){};
   virtual void parse_string_(const char *string_value){};
 
-  // Called by the manager to setup a RegisterDispatcher in order to cascade 'parse_hex' calls
+  // Called by the manager to setup a RegisterDispatcher in order to cascade 'parse_hex/parse_text' calls
   // when this Register is being added to the registered registers. The base implementation will
   // setup a new RegisterDispatcher cascading this and the provided 'hex_register' while the
   // RegisterDispatcher will just add it to it's existing list
@@ -107,14 +116,36 @@ class Register {
   parse_text_func_t parse_text_;
   static void parse_text_empty_(Register *hex_register, const char *text_value) {}
 #endif
+
+  /// @brief Drops the platform 'build_entity' for the specified platform
+  /// and returns a plain Register object instead. This is used when a platform 'build_entity'
+  /// function detects we've run out of available space for entities registration.
+  static Register *drop_platform(Manager *manager, Platform platform);
 };
 
 /// @brief Mixin style specialization for entities that can write configuration data to
 /// the VEDirect interface (Number, Select, Switch)
-class WritableRegister {
+class WritableRegister : public Register {
  public:
   Manager *const manager;
-  WritableRegister(Manager *manager) : manager(manager) {}
+
+ protected:
+#if defined(VEDIRECT_USE_HEXFRAME) && defined(VEDIRECT_USE_TEXTFRAME)
+  WritableRegister(Manager *manager, parse_hex_func_t parse_hex_func = parse_hex_empty_,
+                   parse_text_func_t parse_text_func = parse_text_empty_)
+      : Register(parse_hex_func, parse_text_func), manager(manager) {}
+#elif defined(VEDIRECT_USE_HEXFRAME)
+  WritableRegister(Manager *manager, parse_hex_func_t parse_hex_func = parse_hex_empty_)
+      : Register(parse_hex_func), manager(manager) {}
+#elif defined(VEDIRECT_USE_TEXTFRAME)
+  // We don't really need WritableRegister for TEXTFRAME only entities but let's keep the symmetry
+  WritableRegister(Manager *manager, parse_text_func_t parse_text_func = parse_text_empty_)
+      : Register(parse_text_func), manager(manager) {}
+#endif
+
+#if defined(VEDIRECT_USE_HEXFRAME)
+  void request_set_(uint32_t value, std::function<void(const HexFrame *, uint8_t)> &&callback);
+#endif
 };
 
 /// @brief Mixin style specialization for Number and Sensor entities.
@@ -128,7 +159,9 @@ class NumericRegister {
 
 /// @brief This class provides on-demand frame dispatching to multiple registers with the same
 /// HEX address and/or TEXT label. This is installed in the Manager.hex_registers_ collection
-/// when needed so that it'll be able to dispatch frame data to multiple registers.
+/// when needed so that it'll be able to dispatch frame data to multiple registers with the same
+/// HEX address and/or TEXT label.
+/// After implementing TinyMap container this code might not be needed anymore.
 class RegisterDispatcher final : public Register {
  public:
   friend class Register;

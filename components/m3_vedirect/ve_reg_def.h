@@ -93,18 +93,20 @@ struct REG_DEF {
 
   /// @brief Defines the data semantics of this register
   enum CLASS : uint8_t {
-    VOID,     // untyped data. Generally rendered by the 'default' handler (HEX for TextSensors)
-    BITMASK,  // represents a set of bit flags
-    BOOLEAN,  // boolean state represented by 0 -> false, 1 -> true
-    ENUM,     // enumeration data
-    NUMERIC,  // numeric data (either signed or unsigned)
-    STRING,   // (ascii?) content
+    VOID = 0,     // untyped data. Generally rendered by the 'default' handler (HEX for TextSensors)
+    BITMASK = 1,  // represents a set of bit flags
+    BOOLEAN = 2,  // boolean state represented by 0 -> false, 1 -> true
+    ENUM = 3,     // enumeration data
+    NUMERIC = 4,  // numeric data (either signed or unsigned)
+    STRING = 5,   // (ascii?) content
+    CLASS_COUNT,
   };
 
   enum ACCESS : uint8_t {
     CONSTANT = 0,    // fixed read-only value
     READ_ONLY = 1,   // measure
     READ_WRITE = 2,  // configuration
+    ACCESS_COUNT,
   };
 
   typedef HEXFRAME::DATA_TYPE DATA_TYPE;

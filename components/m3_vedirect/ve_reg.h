@@ -15,17 +15,17 @@ typedef unsigned char group_id_t;
 /// @brief basic HEXFRAME prototype declaration
 struct HEXFRAME {
   enum COMMAND : uint8_t {
-    Ping = 0x1,
-    Done = 0x1,  // response
-    AppVersion = 0x3,
-    Unknown = 0x3,  // response
-    ProductId = 0x4,
-    Error = 0x4,     // response
-    PingResp = 0x5,  // response
-    Restart = 0x6,
-    Get = 0x7,
-    Set = 0x8,
-    Async = 0xA,
+    Ping = 0x1,        // request
+    Done = 0x1,        // response
+    AppVersion = 0x3,  // request
+    Unknown = 0x3,     // response
+    ProductId = 0x4,   // request
+    Error = 0x4,       // response
+    PingResp = 0x5,    // response
+    Restart = 0x6,     // request
+    Get = 0x7,         // request/response
+    Set = 0x8,         // request/response
+    Async = 0xA,       // asynchronous notification
   };
 
   enum DATA_TYPE : uint8_t {

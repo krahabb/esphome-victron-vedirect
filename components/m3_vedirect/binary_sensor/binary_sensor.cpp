@@ -1,6 +1,5 @@
 #include "binary_sensor.h"
 #include "esphome/core/application.h"
-#include "esphome/core/version.h"
 #ifdef USE_API
 #include "esphome/components/api/api_server.h"
 #endif
@@ -12,21 +11,34 @@
 namespace esphome {
 namespace m3_vedirect {
 
-Register *BinarySensor::build_entity(Manager *manager, const char *name, const char *object_id) {
-  auto entity = new BinarySensor(manager);
-  Register::dynamic_init_entity_(entity, name, object_id, manager->get_vedirect_name(), manager->get_vedirect_id());
-  App.register_binary_sensor(entity);
-#ifdef USE_API
-  if (api::global_api_server) {
-#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 7, 0)
-    entity->add_on_state_callback([entity](bool state) { api::global_api_server->on_binary_sensor_update(entity); });
-#else
-    entity->add_on_state_callback(
-        [entity](bool state) { api::global_api_server->on_binary_sensor_update(entity, state); });
-#endif
+Register *BinarySensor::build_entity(Manager *manager, const REG_DEF *reg_def, const char *name) {
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 8, 0)
+  if (App.get_binary_sensors().size() >= ESPHOME_ENTITY_BINARY_SENSOR_COUNT) {
+    return Register::drop_platform(manager, Platform::BinarySensor);
   }
 #endif
+  auto entity = new BinarySensor(manager);
+  manager->init_entity(entity, reg_def, name);
+  App.register_binary_sensor(entity);
+#ifdef USE_API
+  entity->add_on_state_callback([entity](bool state) {
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 7, 0)
+    api::global_api_server->on_binary_sensor_update(entity);
+#else
+    api::global_api_server->on_binary_sensor_update(entity, state);
+#endif
+  });
+#endif
   return entity;
+}
+
+void BinarySensor::link_disconnected_() {
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 7, 0)
+  // Assuming the StatefulEntityBase implementation was released here.
+  this->invalidate_state();
+#else
+  this->set_has_state(false);
+#endif
 }
 
 void BinarySensor::init_reg_def_() {

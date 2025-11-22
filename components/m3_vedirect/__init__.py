@@ -34,6 +34,7 @@ HexFrameTrigger = Manager.class_(
 
 CONF_VEDIRECT_ID = "vedirect_id"
 CONF_VEDIRECT_ENTITIES = "vedirect_entities"
+CONF_VEDIRECT_DYNAMIC_ENTITIES_MAX = "vedirect_dynamic_entities_max"
 CONF_TEXTFRAME = "textframe"
 CONF_HEXFRAME = "hexframe"
 
@@ -233,6 +234,15 @@ def deflate_flavors(flavors: typing.Iterable):
 class VEDirectPlatform:
     COMPONENT_NS: typing.Final = m3_vedirect_ns
 
+    DEFAULT_DYNAMIC_ENTITIES_MAX: typing.Final = {
+        "binary_sensor": 5,
+        "number": 5,
+        "select": 5,
+        "sensor": 10,
+        "switch": 5,
+        "text_sensor": 10,
+    }
+
     RegisterEntityT = typing.Callable[[typing.Any, typing.Any], typing.Awaitable[None]]
     register_entity: RegisterEntityT
 
@@ -250,8 +260,9 @@ class VEDirectPlatform:
         ],  # vedirect classes supported by this platform
         vedirect_has_text: bool,  # indicates if this platform supports entities for the TEXT frames
         *vedirect_schemas,  # extra schemas added to base vedirect_schema
-        register_entity: RegisterEntityT
-        | None = None,  # optional custom register_entity function
+        register_entity: (
+            RegisterEntityT | None
+        ) = None,  # optional custom register_entity function
     ):
         self.snake_name = snake_name
         self.class_name = "".join([p.capitalize() for p in snake_name.split("_")])
@@ -296,6 +307,10 @@ class VEDirectPlatform:
         return cv.Schema(
             {
                 cv.Required(CONF_VEDIRECT_ID): cv.use_id(Manager),
+                cv.Optional(
+                    CONF_VEDIRECT_DYNAMIC_ENTITIES_MAX,
+                    default=self.DEFAULT_DYNAMIC_ENTITIES_MAX[self.snake_name],
+                ): cv.positive_int,
                 cv.Optional(CONF_VEDIRECT_ENTITIES): cv.ensure_list(
                     self.vedirect_schema
                 ),
@@ -389,11 +404,6 @@ class VEDirectPlatform:
 
     async def to_code(self, config: dict):
         manager = await cg.get_variable(config[CONF_VEDIRECT_ID])
-        cg.add(
-            cpp.RawStatement(
-                f"m3_vedirect::Register::register_platform(m3_vedirect::Register::{self.class_name}, m3_vedirect::{self.class_name}::build_entity);"
-            )
-        )
         for entity_key, entity_config in config.items():
             if entity_key == CONF_VEDIRECT_ENTITIES:
                 for _entity_config in entity_config:
@@ -412,31 +422,12 @@ class VEDirectPlatform:
         if cv.Version(2025, 8, 0) <= ESPHOME_VERSION:
             # Platforms entities vectors are now statically pre-allocated so we have
             # to tell EspHome core how many entities we want. This is especially needed for dynamically
-            # allocated ones since we don't know the number at config time ;)
-            _dynamic_entities_count = (
-                1  # ensure at least 1 slot whatever the config for little safety
-            )
-            # Config for dynamic entities is set at the manager component level.
-            # We provide default values when 'auto_create_entities' is set with a
-            # bool value (legacy validator)
-            for _key, _default_entities_count in {
-                CONF_HEXFRAME: 100,
-                CONF_TEXTFRAME: 32,
-            }.items():
-                try:
-                    _count_or_bool = MANAGERS_CONFIG[config[CONF_VEDIRECT_ID]][_key][
-                        CONF_AUTO_CREATE_ENTITIES
-                    ]
-                    _dynamic_entities_count += (
-                        _default_entities_count
-                        if _count_or_bool is True
-                        else int(_count_or_bool)
-                    )
-                except KeyError:
-                    pass
+            # allocated ones since we don't know the total number at compile time ;)
             # BEWARE: we should loop on this api but we take the direct path
             # CORE.register_platform_component(self.snake_name, None)
-            CORE.platform_counts[self.snake_name] += _dynamic_entities_count
+            CORE.platform_counts[self.snake_name] += config[
+                CONF_VEDIRECT_DYNAMIC_ENTITIES_MAX
+            ]
 
 
 # main component (Manager) schema
@@ -465,16 +456,12 @@ CONFIG_SCHEMA = (
             ): cv.ensure_list(validate_str_enum(ve_reg.Flavor)),
             cv.Optional(CONF_TEXTFRAME): cv.Schema(
                 {
-                    cv.Optional(CONF_AUTO_CREATE_ENTITIES): cv.Any(
-                        cv.boolean, cv.positive_int
-                    ),
+                    cv.Optional(CONF_AUTO_CREATE_ENTITIES): cv.boolean,
                 }
             ),
             cv.Optional(CONF_HEXFRAME): cv.Schema(
                 {
-                    cv.Optional(CONF_AUTO_CREATE_ENTITIES): cv.Any(
-                        cv.boolean, cv.positive_int
-                    ),
+                    cv.Optional(CONF_AUTO_CREATE_ENTITIES): cv.boolean,
                     cv.Optional(CONF_PING_TIMEOUT): cv.positive_time_period_seconds,
                     cv.Optional(CONF_ON_FRAME_RECEIVED): automation.validate_automation(
                         {
@@ -510,7 +497,8 @@ async def to_code(config: dict):
     """
     var = cg.new_Pvariable(config[ec.CONF_ID])
     cg.add(var.set_vedirect_id(str(var.base)))
-    cg.add(var.set_vedirect_name(config.get(ec.CONF_NAME, str(var.base))))
+    if ec.CONF_NAME in config:
+        cg.add(var.set_vedirect_name(config[ec.CONF_NAME]))
     for flavor in deflate_flavors(config[CONF_FLAVOR]):
         cg.add_build_flag(f"-DVEDIRECT_FLAVOR_{flavor}")
     if CONF_TEXTFRAME in config:

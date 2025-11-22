@@ -26,18 +26,27 @@ const uint8_t Sensor::SCALE_TO_DIGITS[REG_DEF::SCALE::SCALE_COUNT] = {
     2,  // S_0_25,
 };
 
-Register *Sensor::build_entity(Manager *manager, const char *name, const char *object_id) {
+Register *Sensor::build_entity(Manager *manager, const REG_DEF *reg_def, const char *name) {
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 8, 0)
+  if (App.get_sensors().size() >= ESPHOME_ENTITY_SENSOR_COUNT) {
+    return Register::drop_platform(manager, Platform::Sensor);
+  }
+#endif
   auto entity = new Sensor(manager);
-  Register::dynamic_init_entity_(entity, name, object_id, manager->get_vedirect_name(), manager->get_vedirect_id());
+  manager->init_entity(entity, reg_def, name);
   App.register_sensor(entity);
 #ifdef USE_API
-  if (api::global_api_server)
-    entity->add_on_state_callback([entity](float state) { api::global_api_server->on_sensor_update(entity, state); });
+  entity->add_on_state_callback([entity](float state) { api::global_api_server->on_sensor_update(entity, state); });
 #endif
   return entity;
 }
 
-void Sensor::link_disconnected_() { this->publish_state(NAN); }
+void Sensor::link_disconnected_() {
+  if (this->has_state()) {
+    this->publish_state(NAN);
+    this->set_has_state(false);
+  }
+}
 
 void Sensor::init_reg_def_() {
   auto reg_def = this->reg_def_;

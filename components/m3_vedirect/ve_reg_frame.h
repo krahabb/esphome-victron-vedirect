@@ -145,17 +145,8 @@ struct HexFrame {
   inline void command_set(register_id_t register_id, const void *data, size_t data_size) {
     this->command(HEXFRAME::COMMAND::Set, register_id, data, data_size);
   }
-  inline void command_set(register_id_t register_id, const void *data, HEXFRAME::DATA_TYPE data_type) {
-    this->command(HEXFRAME::COMMAND::Set, register_id, data, HEXFRAME::DATA_TYPE_TO_SIZE[data_type]);
-  }
   template<typename T> void command_set(register_id_t register_id, T data) {
-    auto record = this->record();
-    record->command = HEXFRAME::COMMAND::Set;
-    record->register_id = register_id;
-    record->flags = 0;
-    *(T *) record->data = data;
-    this->rawframe_end_ = this->rawframe_begin_ + 4 + sizeof(T);
-    this->encode_();
+    this->command(HEXFRAME::COMMAND::Set, register_id, &data, sizeof(T));
   }
 
   inline void push_back(uint8_t data) {
@@ -336,14 +327,16 @@ class HexFrameDecoder {
 class FrameHandler {
  public:
   enum Error {
-    CHECKSUM,
-    CODING,
-    OVERFLOW,
+    NONE = 0,
+    CHECKSUM = 1,
+    CODING = 2,
+    OVERFLOW = 3,
 #if defined(VEDIRECT_USE_TEXTFRAME)
-    NAME_OVERFLOW,
-    VALUE_OVERFLOW,
-    RECORD_OVERFLOW,
+    NAME_OVERFLOW = 4,
+    VALUE_OVERFLOW = 5,
+    RECORD_OVERFLOW = 6,
 #endif
+    _COUNT,
   };
 
   enum State {

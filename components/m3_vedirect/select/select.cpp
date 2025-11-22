@@ -15,22 +15,29 @@ namespace m3_vedirect {
 static const char *const TAG = "m3_vedirect.select";
 #endif
 
-Register *Select::build_entity(Manager *manager, const char *name, const char *object_id) {
+Register *Select::build_entity(Manager *manager, const REG_DEF *reg_def, const char *name) {
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 8, 0)
+  if (App.get_selects().size() >= ESPHOME_ENTITY_SELECT_COUNT) {
+    return Register::drop_platform(manager, Platform::Select);
+  }
+#endif
   auto entity = new Select(manager);
-  Register::dynamic_init_entity_(entity, name, object_id, manager->get_vedirect_name(), manager->get_vedirect_id());
+  manager->init_entity(entity, reg_def, name);
   App.register_select(entity);
 #ifdef USE_API
-  if (api::global_api_server)
-    entity->add_on_state_callback([entity](const std::string &state, size_t index) {
-      api::global_api_server->on_select_update(entity, state, index);
-    });
+  entity->add_on_state_callback([entity](const std::string &state, size_t index) {
+    api::global_api_server->on_select_update(entity, state, index);
+  });
 #endif
   return entity;
 }
 
 void Select::link_disconnected_() {
-  this->enum_value_ = ENUM_DEF::VALUE_UNKNOWN;
-  this->publish_state_("unknown", -1);
+  if (this->has_state()) {
+    this->enum_value_ = ENUM_DEF::VALUE_UNKNOWN;
+    this->publish_state_("unknown", -1);
+    this->set_has_state(false);
+  }
 }
 
 void Select::init_reg_def_() {
@@ -76,26 +83,22 @@ void Select::control(const std::string &value) {
   // TODO: are we 100% sure enum_def is defined ? check yaml init code
   auto lookup_def = this->reg_def_->enum_def->lookup_value(value.c_str());
   if (lookup_def) {
-    this->manager->request(HEXFRAME::COMMAND::Set, this->reg_def_->register_id, &lookup_def->value,
-                           this->reg_def_->data_type, request_callback_, this);
-  }
-}
-
-void Select::request_callback_(void *callback_param, const RxHexFrame *hex_frame) {
-  Select *_select = reinterpret_cast<Select *>(callback_param);
-  if (!hex_frame || (hex_frame && hex_frame->flags())) {
-    // Error or timeout..resend actual state since it looks like HA esphome does optimistic
-    // updates in it's HA entity instance...
-    if (_select->enum_value_ != ENUM_DEF::VALUE_UNKNOWN) {
-      _select->publish_enum_(_select->enum_value_);
-    }
-  } else {
-    // Invalidate our state so that the subsequent dispatching/parsing goes through
-    // an effective publish_state. This is needed (again) since the frontend already
-    // optimistically updated the entity to the new value but even in case of success,
-    // the device might 'force' a different setting if the request was for an unsupported
-    // ENUM
-    _select->enum_value_ = ENUM_DEF::VALUE_UNKNOWN;
+    this->request_set_(lookup_def->value, [this](const HexFrame *frame, uint8_t error) {
+      if (error) {
+        // Error or timeout..resend actual state since it looks like HA esphome does optimistic
+        // updates in it's HA entity instance...
+        if (this->enum_value_ != ENUM_DEF::VALUE_UNKNOWN) {
+          this->publish_enum_(this->enum_value_);
+        }
+      } else {
+        // Invalidate our state so that the subsequent dispatching/parsing goes through
+        // an effective publish_state. This is needed (again) since the frontend already
+        // optimistically updated the entity to the new value but even in case of success,
+        // the device might 'force' a different setting if the request was for an unsupported
+        // ENUM
+        this->enum_value_ = ENUM_DEF::VALUE_UNKNOWN;
+      }
+    });
   }
 }
 

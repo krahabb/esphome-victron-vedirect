@@ -1,5 +1,6 @@
 #pragma once
 #include "ve_reg_def.h"
+#include "esphome/core/version.h"
 #include <stddef.h>
 #include <cstring>
 
@@ -22,30 +23,20 @@ class Register;
 // reply after which we consider the command unsuccesful
 #define VEDIRECT_COMMAND_TIMEOUT_MILLIS 1000
 
-// Helpers for unordered_map with const char* key
-#if __cpp_constexpr >= 201304L
-#define _RELAXEDCONSTEXPR constexpr
-#else
-#define _RELAXEDCONSTEXPR
+// maximum number of pending requests (GET/SET/COMMAND) we can queue/track
+#ifndef VEDIRECT_REQUEST_QUEUE_SIZE
+#define VEDIRECT_REQUEST_QUEUE_SIZE 5
 #endif
-#define _HASH_SHIFT 16u
-#define _HASH_MUL 23456789u
 
-struct cstring_hash {
-  _RELAXEDCONSTEXPR size_t operator()(const char *s) const {
-    size_t h = 0;
-    for (; *s; ++s) {
-      h = h * _HASH_MUL + static_cast<unsigned char>(*s);
-      h ^= h >> _HASH_SHIFT;
-    }
-    return h *= _HASH_MUL;
-  }
-};
+// number of pre-allocated buckets in HEX registers map (see HexRegisterMap)
+#ifndef VEDIRECT_HEXMAP_SIZE
+#define VEDIRECT_HEXMAP_SIZE 64
+#endif
 
-struct cstring_eq {
-  _RELAXEDCONSTEXPR
-  bool operator()(const char *__x, const char *__y) const { return !strcmp(__x, __y); }
-};
+// number of pre-allocated buckets in TEXT registers map (see TextRegisterMap)
+#ifndef VEDIRECT_TEXTMAP_SIZE
+#define VEDIRECT_TEXTMAP_SIZE 16
+#endif
 
 }  // namespace m3_vedirect
 }  // namespace esphome

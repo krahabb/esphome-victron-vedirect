@@ -11,21 +11,28 @@
 namespace esphome {
 namespace m3_vedirect {
 
-Register *TextSensor::build_entity(Manager *manager, const char *name, const char *object_id) {
+Register *TextSensor::build_entity(Manager *manager, const REG_DEF *reg_def, const char *name) {
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 8, 0)
+  if (App.get_text_sensors().size() >= ESPHOME_ENTITY_TEXT_SENSOR_COUNT) {
+    return Register::drop_platform(manager, Platform::TextSensor);
+  }
+#endif
   auto entity = new TextSensor(manager);
-  Register::dynamic_init_entity_(entity, name, object_id, manager->get_vedirect_name(), manager->get_vedirect_id());
+  manager->init_entity(entity, reg_def, name);
   App.register_text_sensor(entity);
 #ifdef USE_API
-  if (api::global_api_server)
-    entity->add_on_state_callback(
-        [entity](std::string state) { api::global_api_server->on_text_sensor_update(entity, state); });
+  entity->add_on_state_callback(
+      [entity](const std::string &state) { api::global_api_server->on_text_sensor_update(entity, state); });
 #endif
   return entity;
 }
 
 void TextSensor::link_disconnected_() {
-  this->raw_value_ = BITMASK_DEF::VALUE_UNKNOWN;
-  this->publish_state("unknown");
+  if (this->has_state()) {
+    this->raw_value_ = BITMASK_DEF::VALUE_UNKNOWN;
+    this->publish_state("unknown");
+    this->set_has_state(false);
+  }
 }
 
 void TextSensor::init_reg_def_() {

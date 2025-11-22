@@ -55,12 +55,16 @@ number:
         name: "EQUALISATION_CURRENT_LEVEL"
       - register: LOW_TEMP_CHARGE_CURRENT
         name: "LOW_TEMP_CHARGE_CURRENT"
+      - register: TAIL_CURRENT
+        name: "TAIL_CURRENT"
       - register: BAT_MAX_CURRENT
         name: "BAT_MAX_CURRENT"
       - register: BAT_TEMPERATURE_COMPENSATION
         name: "BAT_TEMPERATURE_COMPENSATION"
       - register: BAT_EQUALISATION_VOLTAGE
         name: "BAT_EQUALISATION_VOLTAGE"
+      - register: BAT_STORAGE_VOLTAGE
+        name: "BAT_STORAGE_VOLTAGE"
       - register: BAT_FLOAT_VOLTAGE
         name: "BAT_FLOAT_VOLTAGE"
       - register: BAT_ABSORPTION_VOLTAGE

@@ -15,16 +15,22 @@ namespace m3_vedirect {
 static const char *const TAG = "m3_vedirect.switch";
 #endif
 
-Register *Switch::build_entity(Manager *manager, const char *name, const char *object_id) {
+Register *Switch::build_entity(Manager *manager, const REG_DEF *reg_def, const char *name) {
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 8, 0)
+  if (App.get_switches().size() >= ESPHOME_ENTITY_SWITCH_COUNT) {
+    return Register::drop_platform(manager, Platform::Switch);
+  }
+#endif
   auto entity = new Switch(manager);
-  Register::dynamic_init_entity_(entity, name, object_id, manager->get_vedirect_name(), manager->get_vedirect_id());
+  manager->init_entity(entity, reg_def, name);
   App.register_switch(entity);
 #ifdef USE_API
-  if (api::global_api_server)
-    entity->add_on_state_callback([entity](bool state) { api::global_api_server->on_switch_update(entity, state); });
+  entity->add_on_state_callback([entity](bool state) { api::global_api_server->on_switch_update(entity, state); });
 #endif
   return entity;
 }
+
+void Switch::link_disconnected_() { this->set_has_state(false); }
 
 void Switch::init_reg_def_() {
   switch (this->reg_def_->cls) {
@@ -82,24 +88,20 @@ void Switch::write_state(bool state) {
       hexvalue = state ? 1 : 0;
       break;
   }
-  this->manager->request(HEXFRAME::COMMAND::Set, this->reg_def_->register_id, &hexvalue, this->reg_def_->data_type,
-                         request_callback_, this);
-}
-
-void Switch::request_callback_(Manager::request_callback_param_t callback_param, const RxHexFrame *hex_frame) {
-  Switch *_switch = reinterpret_cast<Switch *>(callback_param);
-  if (!hex_frame || (hex_frame && hex_frame->flags())) {
-    // Error or timeout..resend actual state since it looks like HA esphome does optimistic
-    // updates in it's HA entity instance...
-    _switch->republish_state_();
-  } else {
-    // Invalidate our state so that the subsequent dispatching/parsing goes through
-    // an effective publish_state. This is needed (again) since the frontend already
-    // optimistically updated the entity to the new value but even in case of success,
-    // the device might 'force' a different setting if the request was for an unsupported
-    // value
-    _switch->raw_value_ = BITMASK_DEF::VALUE_UNKNOWN;
-  }
+  this->request_set_(hexvalue, [this](const HexFrame *frame, uint8_t error) {
+    if (error) {
+      // Error or timeout..resend actual state since it looks like HA esphome does optimistic
+      // updates in it's HA entity instance...
+      this->republish_state_();
+    } else {
+      // Invalidate our state so that the subsequent dispatching/parsing goes through
+      // an effective publish_state. This is needed (again) since the frontend already
+      // optimistically updated the entity to the new value but even in case of success,
+      // the device might 'force' a different setting if the request was for an unsupported
+      // value
+      this->raw_value_ = BITMASK_DEF::VALUE_UNKNOWN;
+    }
+  });
 }
 
 void Switch::parse_hex_default_(Register *hex_register, const RxHexFrame *hex_frame) {

@@ -65,7 +65,7 @@ m3_vedirect:
 
 sensor:
   - platform: m3_vedirect
-    vedirect_id: vedirect_0    
+    vedirect_id: vedirect_0
     vedirect_entities:
       - register: DC_CHANNEL1_VOLTAGE
         name: 'Battery voltage'
@@ -76,18 +76,18 @@ sensor:
 ```
 Using the `register` configuration will automatically set all of the needed info in order to correctly decode the register carrying the battery voltage (DC_CHANNEL1_VOLTAGE) and setup the sensor entity with proper unit, digits, scale, device class, state class. Now, keep in mind the `DC_CHANNEL1_VOLTAGE`-`DC_CHANNEL1_CURRENT`-`PANEL_POWER` registers are defined as `NUMERIC` in 'component terms' and that allows them to be configured as (numeric) sensors (this is useful when inspecting the list of available [pre-defined registers](#register-definitions) published later in order to know which kind of entity supports it)
 
-Let's see another useful 
+Let's see another useful
 Example 2:
 configure a text_sensor for `DEVICE_STATE`
 ```yaml
 text_sensor:
   - platform: m3_vedirect
-    vedirect_id: vedirect_0    
+    vedirect_id: vedirect_0
     vedirect_entities:
       - register: DEVICE_STATE
         name: 'Device state (enum)'
 ```
-Register `DEVICE_STATE` (hex address 0x0201) is encoded as an `ENUM` and this component carries (hardcoded in english) the different labels associated with those enum values (according to Victron official nomenclature) so that the text sensor will show you these labels instead of numeric values. This is true for any register defined as `ENUM` so that the text sensor will always try to map the numeric value to a meaningful label. 
+Register `DEVICE_STATE` (hex address 0x0201) is encoded as an `ENUM` and this component carries (hardcoded in english) the different labels associated with those enum values (according to Victron official nomenclature) so that the text sensor will show you these labels instead of numeric values. This is true for any register defined as `ENUM` so that the text sensor will always try to map the numeric value to a meaningful label.
 If you want to see the underlying numeric value it is possible though: just use a sensor definition instead of a text_sensor:
 ```yaml
 sensor:
@@ -174,7 +174,7 @@ This table exposes the list of actually pre-defined registers to be used with th
 | PANEL_POWER                   | 0xEDBC      | NUMERIC | READ_ONLY  | MPPT     |
 | PANEL_CURRENT                 | 0xEDBD      | NUMERIC | READ_ONLY  | MPPT     |
 | PANEL_MAXIMUM_CURRENT         | 0xEDBF      | NUMERIC | CONSTANT   | MPPT_RS  |
-| VOLTAGE_COMPENSATION          | 0xEDCA      | NUMERIC | READ_WRITE | MPPT     |
+| VOLTAGE_COMPENSATION          | 0xEDCA      | NUMERIC | READ_WRITE | CHG      |
 | MAXIMUM_POWER_YESTERDAY       | 0xEDD0      | NUMERIC | READ_ONLY  | MPPT     |
 | YIELD_YESTERDAY               | 0xEDD1      | NUMERIC | READ_ONLY  | MPPT     |
 | MAXIMUM_POWER_TODAY           | 0xEDD2      | NUMERIC | READ_ONLY  | MPPT     |
@@ -185,26 +185,28 @@ This table exposes the list of actually pre-defined registers to be used with th
 | CHR_INTERNAL_TEMPERATURE      | 0xEDDB      | NUMERIC | READ_ONLY  | CHG      |
 | USER_YIELD                    | 0xEDDC      | NUMERIC | READ_ONLY  | MPPT     |
 | SYSTEM_YIELD                  | 0xEDDD      | NUMERIC | READ_ONLY  | MPPT     |
-| BAT_LOW_TEMP_LEVEL            | 0xEDE0      | NUMERIC | READ_WRITE | MPPT     |
-| REBULK_VOLTAGE_OFFSET         | 0xEDE2      | NUMERIC | READ_WRITE | MPPT     |
-| EQUALISATION_DURATION         | 0xEDE3      | NUMERIC | READ_WRITE | MPPT     |
-| EQUALISATION_CURRENT_LEVEL    | 0xEDE4      | NUMERIC | READ_WRITE | MPPT     |
-| AUTO_EQUALISE_STOP_ON_VOLTAGE | 0xEDE5      | BOOLEAN | READ_WRITE | MPPT     |
-| LOW_TEMP_CHARGE_CURRENT       | 0xEDE6      | NUMERIC | READ_WRITE | MPPT     |
-| BMS_PRESENT                   | 0xEDE8      | BOOLEAN | READ_WRITE | MPPT     |
-| BAT_VOLTAGE_SETTING           | 0xEDEA      | ENUM    | READ_WRITE | MPPT     |
+| BAT_LOW_TEMP_LEVEL            | 0xEDE0      | NUMERIC | READ_WRITE | CHG      |
+| REBULK_VOLTAGE_OFFSET         | 0xEDE2      | NUMERIC | READ_WRITE | CHG      |
+| EQUALISATION_DURATION         | 0xEDE3      | NUMERIC | READ_WRITE | CHG      |
+| EQUALISATION_CURRENT_LEVEL    | 0xEDE4      | NUMERIC | READ_WRITE | CHG      |
+| AUTO_EQUALISE_STOP_ON_VOLTAGE | 0xEDE5      | BOOLEAN | READ_WRITE | CHG      |
+| LOW_TEMP_CHARGE_CURRENT       | 0xEDE6      | NUMERIC | READ_WRITE | CHG      |
+| TAIL_CURRENT                  | 0xEDE7      | NUMERIC | READ_WRITE | CHG      |
+| BMS_PRESENT                   | 0xEDE8      | BOOLEAN | READ_WRITE | CHG      |
+| BAT_VOLTAGE_SETTING           | 0xEDEA      | ENUM    | READ_WRITE | CHG      |
 | BAT_TEMPERATURE               | 0xEDEC      | NUMERIC | READ_ONLY  | ANY      |
-| BAT_VOLTAGE                   | 0xEDEF      | NUMERIC | READ_ONLY  | MPPT     |
-| BAT_MAX_CURRENT               | 0xEDF0      | NUMERIC | READ_WRITE | MPPT     |
-| BAT_TYPE                      | 0xEDF1      | ENUM    | READ_WRITE | MPPT     |
-| BAT_TEMPERATURE_COMPENSATION  | 0xEDF2      | NUMERIC | READ_WRITE | MPPT     |
-| BAT_EQUALISATION_VOLTAGE      | 0xEDF4      | NUMERIC | READ_WRITE | MPPT     |
-| BAT_FLOAT_VOLTAGE             | 0xEDF6      | NUMERIC | READ_WRITE | MPPT     |
-| BAT_ABSORPTION_VOLTAGE        | 0xEDF7      | NUMERIC | READ_WRITE | MPPT     |
-| BAT_ABSORPTION_LIMIT          | 0xEDFB      | NUMERIC | READ_WRITE | MPPT     |
-| BAT_BULK_LIMIT                | 0xEDFC      | NUMERIC | READ_WRITE | MPPT     |
-| AUTOMATIC_EQUALISATION_MODE   | 0xEDFD      | NUMERIC | READ_WRITE | MPPT     |
-| ADAPTIVE_MODE                 | 0xEDFE      | BOOLEAN | READ_WRITE | MPPT     |
+| BAT_VOLTAGE                   | 0xEDEF      | NUMERIC | READ_ONLY  | CHG      |
+| BAT_MAX_CURRENT               | 0xEDF0      | NUMERIC | READ_WRITE | CHG      |
+| BAT_TYPE                      | 0xEDF1      | ENUM    | READ_WRITE | CHG      |
+| BAT_TEMPERATURE_COMPENSATION  | 0xEDF2      | NUMERIC | READ_WRITE | CHG      |
+| BAT_EQUALISATION_VOLTAGE      | 0xEDF4      | NUMERIC | READ_WRITE | CHG      |
+| BAT_STORAGE_VOLTAGE           | 0xEDF5      | NUMERIC | READ_WRITE | CHG      |
+| BAT_FLOAT_VOLTAGE             | 0xEDF6      | NUMERIC | READ_WRITE | CHG      |
+| BAT_ABSORPTION_VOLTAGE        | 0xEDF7      | NUMERIC | READ_WRITE | CHG      |
+| BAT_ABSORPTION_LIMIT          | 0xEDFB      | NUMERIC | READ_WRITE | CHG      |
+| BAT_BULK_LIMIT                | 0xEDFC      | NUMERIC | READ_WRITE | CHG      |
+| AUTOMATIC_EQUALISATION_MODE   | 0xEDFD      | NUMERIC | READ_WRITE | CHG      |
+| ADAPTIVE_MODE                 | 0xEDFE      | BOOLEAN | READ_WRITE | CHG      |
 | DC_MONITOR_MODE               | 0xEEB8      | NUMERIC | READ_ONLY  | BMV71    |
 | ALARM_BUZZER                  | 0xEEFC      | BOOLEAN | READ_WRITE | BMV      |
 
@@ -246,7 +248,7 @@ binary_sensor:
         mask: 1 # Bit 0 of DEVICE_OFF_REASON bitmask
 ```
 
-Beside these 'primary entity' mappings you can always use a `sensor` entity to represent the raw value as a numeric value even if the register is not marked as `NUMERIC` (though some sign conversion issues might happen since the conversion would be done as an unsigned type whenever the class is not `NUMERIC`). 
+Beside these 'primary entity' mappings you can always use a `sensor` entity to represent the raw value as a numeric value even if the register is not marked as `NUMERIC` (though some sign conversion issues might happen since the conversion would be done as an unsigned type whenever the class is not `NUMERIC`).
 Moreover, the `text_sensor` entity too can represent any class data type, generally falling back to report the hex register value 'as is' (if no better conversion is provided by the register definition).
 
 More help and wiki will come.
