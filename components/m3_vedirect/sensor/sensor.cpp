@@ -1,7 +1,9 @@
 #include "sensor.h"
 #include "esphome/core/application.h"
+#if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 0)
 #ifdef USE_API
 #include "esphome/components/api/api_server.h"
+#endif
 #endif
 
 #include "../manager.h"
@@ -35,8 +37,11 @@ Register *Sensor::build_entity(Manager *manager, const REG_DEF *reg_def, const c
   auto entity = new Sensor(manager);
   manager->init_entity(entity, reg_def, name);
   App.register_sensor(entity);
-#ifdef USE_API
+#if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 0)
+// See https://github.com/esphome/esphome/pull/11772
+#if defined(USE_API)
   entity->add_on_state_callback([entity](float state) { api::global_api_server->on_sensor_update(entity, state); });
+#endif
 #endif
   return entity;
 }

@@ -1,7 +1,9 @@
 #include "text_sensor.h"
 #include "esphome/core/application.h"
+#if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 0)
 #ifdef USE_API
 #include "esphome/components/api/api_server.h"
+#endif
 #endif
 
 #include "../manager.h"
@@ -20,9 +22,12 @@ Register *TextSensor::build_entity(Manager *manager, const REG_DEF *reg_def, con
   auto entity = new TextSensor(manager);
   manager->init_entity(entity, reg_def, name);
   App.register_text_sensor(entity);
-#ifdef USE_API
+#if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 0)
+// See https://github.com/esphome/esphome/pull/11772
+#if defined(USE_API)
   entity->add_on_state_callback(
       [entity](const std::string &state) { api::global_api_server->on_text_sensor_update(entity, state); });
+#endif
 #endif
   return entity;
 }

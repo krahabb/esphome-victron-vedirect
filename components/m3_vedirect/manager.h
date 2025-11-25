@@ -163,174 +163,187 @@ class Manager : public uart::UARTDevice, public Component, protected FrameHandle
    public:
     TEMPLATABLE_VALUE(std::string, data)
 
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+    // See https://github.com/esphome/esphome/pull/11704
+    void play(const Ts &...x) override{
+#else
     void play(Ts... x) {
-      for (auto it = Manager::StaticIterator(this->vedirect_id_.value(x...)); it.has_next();) {
-        it.next()->send_hexframe(this->data_.value(x...));
-      }
-    }
-  };
-  template<typename... Ts> class Action_send_command : public BaseAction<Ts...> {
-   public:
-    TEMPLATABLE_VALUE(uint8_t, command)
-    TEMPLATABLE_VALUE(register_id_t, register_id)
-    TEMPLATABLE_VALUE(uint32_t, data)
-    TEMPLATABLE_VALUE(uint8_t, data_size)
+#endif
+        for (auto it = Manager::StaticIterator(this->vedirect_id_.value(x...)); it.has_next();) {
+          it.next()->send_hexframe(this->data_.value(x...));
+  }
+}
+};
+template<typename... Ts> class Action_send_command : public BaseAction<Ts...> {
+ public:
+  TEMPLATABLE_VALUE(uint8_t, command)
+  TEMPLATABLE_VALUE(register_id_t, register_id)
+  TEMPLATABLE_VALUE(uint32_t, data)
+  TEMPLATABLE_VALUE(uint8_t, data_size)
 
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+  // See https://github.com/esphome/esphome/pull/11704
+  void play(const Ts &...x) override{
+#else
     void play(Ts... x) {
+#endif
+
       for (auto it = Manager::StaticIterator(this->vedirect_id_.value(x...)); it.has_next();) {
         HEXFRAME::COMMAND command = (HEXFRAME::COMMAND) this->command_.value(x...);
-        switch (command) {
-          case HEXFRAME::COMMAND::Get:
-            it.next()->request_get(this->register_id_.value(x...));
-            break;
-          case HEXFRAME::COMMAND::Set:
-            switch (this->data_size_.value(x...)) {
-              case 1:
-                it.next()->request_set(this->register_id_.value(x...), (uint8_t) this->data_.value(x...));
-                break;
-              case 2:
-                it.next()->request_set(this->register_id_.value(x...), (uint16_t) this->data_.value(x...));
-                break;
-              default:
-                it.next()->request_set(this->register_id_.value(x...), (uint32_t) this->data_.value(x...));
-                break;
-            }
-            break;
-          default:
-            it.next()->request_command(command);
-        }
+  switch (command) {
+    case HEXFRAME::COMMAND::Get:
+      it.next()->request_get(this->register_id_.value(x...));
+      break;
+    case HEXFRAME::COMMAND::Set:
+      switch (this->data_size_.value(x...)) {
+        case 1:
+          it.next()->request_set(this->register_id_.value(x...), (uint8_t) this->data_.value(x...));
+          break;
+        case 2:
+          it.next()->request_set(this->register_id_.value(x...), (uint16_t) this->data_.value(x...));
+          break;
+        default:
+          it.next()->request_set(this->register_id_.value(x...), (uint32_t) this->data_.value(x...));
+          break;
       }
-    }
-  };
+      break;
+    default:
+      it.next()->request_command(command);
+  }
+}
+}
+}
+;
 #endif
 
 #if defined(VEDIRECT_USE_TEXTFRAME)
-  void set_auto_create_text_entities(bool value) { this->auto_create_text_entities_ = value; }
-  /// @brief Binds the entity to a TEXT FRAME field label so that text frame parsing
-  /// will be automatically routed. This method is part of the public interface
-  /// called by yaml generated code
-  /// @param label the name of the TEXT FRAME record to bind
-  void init_register(Register *reg, const char *label);
+void set_auto_create_text_entities(bool value) { this->auto_create_text_entities_ = value; }
+/// @brief Binds the entity to a TEXT FRAME field label so that text frame parsing
+/// will be automatically routed. This method is part of the public interface
+/// called by yaml generated code
+/// @param label the name of the TEXT FRAME record to bind
+void init_register(Register *reg, const char *label);
 #endif  // defined(VEDIRECT_USE_TEXTFRAME)
-  // CONFIGURATION END
+// CONFIGURATION END
 
-  const char *get_logtag() const { return this->logtag_; }
-  bool is_connected() const { return this->connected_; }
+const char *get_logtag() const { return this->logtag_; }
+bool is_connected() const { return this->connected_; }
 
-  /// @brief Initialize an entity (Register) with the correct naming/id scheme
-  /// when dynamically created by the Manager.
-  void init_entity(EntityBase *entity, const REG_DEF *reg_def, const char *name);
+/// @brief Initialize an entity (Register) with the correct naming/id scheme
+/// when dynamically created by the Manager.
+void init_entity(EntityBase *entity, const REG_DEF *reg_def, const char *name);
 
-  bool has_multi_manager() { return Manager::list_->next_ != nullptr; }
+bool has_multi_manager() { return Manager::list_->next_ != nullptr; }
 
 #if defined(VEDIRECT_USE_HEXFRAME)
-  // The VEDirect port looks like not buffering enough incoming requests so that they'll
-  // be lost if we send too many requests too quickly. To mitigate this, we'll
-  // serialize the requests and wait for a response (or timeout) before sending
-  // the next one.
-  // This is a simple FIFO queue with a fixed maximum size.
-  //
-  // In order to allow maximum flexibility, 2 api(s) are provided:
-  // - 'send_xxx' api is provided in order to allow sending frames without
-  // transaction control (this will disrupt any ongoing transactions though)
-  // - 'request_xxx' api is provided in order to send a request and wait for a response
-  // before sending the next request in the queue (VEDIRECT_REQUEST_QUEUE_SIZE define
-  // can be used to set the queue depth - default is 5).
+// The VEDirect port looks like not buffering enough incoming requests so that they'll
+// be lost if we send too many requests too quickly. To mitigate this, we'll
+// serialize the requests and wait for a response (or timeout) before sending
+// the next one.
+// This is a simple FIFO queue with a fixed maximum size.
+//
+// In order to allow maximum flexibility, 2 api(s) are provided:
+// - 'send_xxx' api is provided in order to allow sending frames without
+// transaction control (this will disrupt any ongoing transactions though)
+// - 'request_xxx' api is provided in order to send a request and wait for a response
+// before sending the next request in the queue (VEDIRECT_REQUEST_QUEUE_SIZE define
+// can be used to set the queue depth - default is 5).
 
-  // send_xxx api: sends an HEX frame without transaction control (send and forget)
-  // This is fragile since it 'collides' with transaction managed requests
-  // so it should be used with care.
-  void send_hexframe(const HexFrame &hexframe);
-  void send_hexframe(const char *rawframe, bool addchecksum = true);
-  void send_hexframe(const std::string &rawframe, bool addchecksum = true) {
-    this->send_hexframe(rawframe.c_str(), addchecksum);
-  }
+// send_xxx api: sends an HEX frame without transaction control (send and forget)
+// This is fragile since it 'collides' with transaction managed requests
+// so it should be used with care.
+void send_hexframe(const HexFrame &hexframe);
+void send_hexframe(const char *rawframe, bool addchecksum = true);
+void send_hexframe(const std::string &rawframe, bool addchecksum = true) {
+  this->send_hexframe(rawframe.c_str(), addchecksum);
+}
 
-  /// @brief Send an HEX command/request with transaction management
-  /// @param command the HEX command to send
-  /// @param register_id the register id to use (ignored if command is not GET/SET)
-  /// @param data the data to use (ignored if command is not SET)
-  /// @param data_type the data type to use (ignored if command is not SET)
-  bool request(HEXFRAME::COMMAND command, register_id_t register_id = REG_DEF::REGISTER_UNDEFINED,
-               const void *data = nullptr, size_t data_size = 0, request_callback_t &&callback = nullptr);
-  bool request_command(HEXFRAME::COMMAND command, request_callback_t &&callback = nullptr) {
-    return this->request(command, REG_DEF::REGISTER_UNDEFINED, nullptr, 0, std::move(callback));
-  }
-  bool request_get(register_id_t register_id, request_callback_t &&callback = nullptr) {
-    return this->request(HEXFRAME::COMMAND::Get, register_id, nullptr, 0, std::move(callback));
-  }
-  template<typename T> bool request_set(register_id_t register_id, T data, request_callback_t &&callback = nullptr) {
-    return this->request(HEXFRAME::COMMAND::Set, register_id, &data, sizeof(T), std::move(callback));
-  }
-  bool request_set(register_id_t register_id, const void *data, size_t data_size,
-                   request_callback_t &&callback = nullptr) {
-    return this->request(HEXFRAME::COMMAND::Set, register_id, data, data_size, std::move(callback));
-  }
+/// @brief Send an HEX command/request with transaction management
+/// @param command the HEX command to send
+/// @param register_id the register id to use (ignored if command is not GET/SET)
+/// @param data the data to use (ignored if command is not SET)
+/// @param data_type the data type to use (ignored if command is not SET)
+bool request(HEXFRAME::COMMAND command, register_id_t register_id = REG_DEF::REGISTER_UNDEFINED,
+             const void *data = nullptr, size_t data_size = 0, request_callback_t &&callback = nullptr);
+bool request_command(HEXFRAME::COMMAND command, request_callback_t &&callback = nullptr) {
+  return this->request(command, REG_DEF::REGISTER_UNDEFINED, nullptr, 0, std::move(callback));
+}
+bool request_get(register_id_t register_id, request_callback_t &&callback = nullptr) {
+  return this->request(HEXFRAME::COMMAND::Get, register_id, nullptr, 0, std::move(callback));
+}
+template<typename T> bool request_set(register_id_t register_id, T data, request_callback_t &&callback = nullptr) {
+  return this->request(HEXFRAME::COMMAND::Set, register_id, &data, sizeof(T), std::move(callback));
+}
+bool request_set(register_id_t register_id, const void *data, size_t data_size,
+                 request_callback_t &&callback = nullptr) {
+  return this->request(HEXFRAME::COMMAND::Set, register_id, data, data_size, std::move(callback));
+}
 
-  bool is_request_pending() const { return this->requests_read_; }
-  bool is_request_queue_full() const { return this->requests_read_ == this->requests_write_; }
+bool is_request_pending() const { return this->requests_read_; }
+bool is_request_queue_full() const { return this->requests_read_ == this->requests_write_; }
 
-  bool is_polling() const { return !this->polling_registers_it_.is_end(); }
+bool is_polling() const { return !this->polling_registers_it_.is_end(); }
 #endif  //  defined(VEDIRECT_USE_HEXFRAME)
 
- protected:
-  // Keeps a linked list of all Manager instances
-  static Manager *list_;
-  Manager *next_;
-  // component config
-  const char *logtag_;
-  const char *vedirect_id_{nullptr};
-  const char *vedirect_name_{nullptr};
+protected:
+// Keeps a linked list of all Manager instances
+static Manager *list_;
+Manager *next_;
+// component config
+const char *logtag_;
+const char *vedirect_id_{nullptr};
+const char *vedirect_name_{nullptr};
 
-  HexRegistersMap hex_registers_;
+HexRegistersMap hex_registers_;
 
-  // component state
-  bool connected_{false};
-  int last_rx_{0};
-  int last_frame_rx_{0};
+// component state
+bool connected_{false};
+int last_rx_{0};
+int last_frame_rx_{0};
 
-  inline void on_connected_();
-  inline void on_disconnected_();
+inline void on_connected_();
+inline void on_disconnected_();
 
 #if defined(VEDIRECT_USE_HEXFRAME)
-  bool auto_create_hex_entities_{false};
-  int ping_timeout_{VEDIRECT_PING_TIMEOUT_MILLIS};
+bool auto_create_hex_entities_{false};
+int ping_timeout_{VEDIRECT_PING_TIMEOUT_MILLIS};
 
-  int last_ping_tx_{0};
+int last_ping_tx_{0};
 
-  // @todo: move to a conditional compilation so we only add this code when actually used
-  friend class HexFrameTrigger;
-  CallbackManager<void(const HexFrame &)> hexframe_callback_;
+// @todo: move to a conditional compilation so we only add this code when actually used
+friend class HexFrameTrigger;
+CallbackManager<void(const HexFrame &)> hexframe_callback_;
 
-  /// @brief Context class for a request for an HEX command/request with transaction management
-  /// so that the response (either succesfull or not) could be tracked and processed accordingly.
-  struct Request : public HexFrameT<7> {
-    request_callback_t callback;
-    int timeout;
-  } requests_[VEDIRECT_REQUEST_QUEUE_SIZE];
-  Request *requests_read_{nullptr};
-  Request *requests_write_{requests_};
-  Request *const requests_last_{&requests_[VEDIRECT_REQUEST_QUEUE_SIZE - 1]};
-  void request_trigger_(Request *request);
-  void request_response_(Request *request, const HexFrame *response, Error error);
+/// @brief Context class for a request for an HEX command/request with transaction management
+/// so that the response (either succesfull or not) could be tracked and processed accordingly.
+struct Request : public HexFrameT<7> {
+  request_callback_t callback;
+  int timeout;
+} requests_[VEDIRECT_REQUEST_QUEUE_SIZE];
+Request *requests_read_{nullptr};
+Request *requests_write_{requests_};
+Request *const requests_last_{&requests_[VEDIRECT_REQUEST_QUEUE_SIZE - 1]};
+void request_trigger_(Request *request);
+void request_response_(Request *request, const HexFrame *response, Error error);
 
-  /// @brief Polling context for HEX registers on connection
-  HexRegistersMap::iterator polling_registers_it_;
-  void poll_next_register_();
+/// @brief Polling context for HEX registers on connection
+HexRegistersMap::iterator polling_registers_it_;
+void poll_next_register_();
 
-  void on_frame_hex_(const RxHexFrame &hexframe) override;
-  void on_frame_hex_error_(FrameHandler::Error error) override;
+void on_frame_hex_(const RxHexFrame &hexframe) override;
+void on_frame_hex_error_(FrameHandler::Error error) override;
 #endif
 
 #if defined(VEDIRECT_USE_TEXTFRAME)
-  bool auto_create_text_entities_{true};
+bool auto_create_text_entities_{true};
 
-  TextRegistersMap text_registers_;
+TextRegistersMap text_registers_;
 
-  void on_frame_text_(TextRecord **text_records, uint8_t text_records_count) override;
-  void on_frame_text_error_(FrameHandler::Error error) override;
+void on_frame_text_(TextRecord **text_records, uint8_t text_records_count) override;
+void on_frame_text_error_(FrameHandler::Error error) override;
 #endif
-};
+}
+;
 
 }  // namespace m3_vedirect
 }  // namespace esphome

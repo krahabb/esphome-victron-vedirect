@@ -16,13 +16,12 @@ class Select final : public WritableRegister, public esphome::select::Select {
   Select(Manager *manager) : WritableRegister(manager, parse_text_default_) {}
 #endif
 
-  /// @brief Factory method to build a TextSensor entity for a given Manager
+  /// @brief Factory method to build a Select entity for a given Manager
   /// This is installed (see Register::register_platform) by yaml generated code
   ///  when setting up this platform.
   /// @param manager the Manager instance to which this entity will be linked
   /// @param name the name of the entity
-  /// @param object_id the object_id of the entity
-  /// @return the newly created TextSensor->Register entity
+  /// @return the newly created Select entity
   static Register *build_entity(Manager *manager, const REG_DEF *reg_def, const char *name);
 
  protected:
@@ -36,7 +35,9 @@ class Select final : public WritableRegister, public esphome::select::Select {
 
 // interface esphome::select::Select
 #if defined(VEDIRECT_USE_HEXFRAME)
+  void control(size_t index) override;
   void control(const std::string &value) override;
+  void control_enum_(const ENUM_DEF::LOOKUP_DEF *lookup_def);
 #else
   void control(const std::string &value) override {}
 #endif
@@ -50,20 +51,25 @@ class Select final : public WritableRegister, public esphome::select::Select {
   static void parse_text_enum_(Register *hex_register, const char *text_value);
 #endif
 
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+  // See https://github.com/esphome/esphome/pull/11772
+  typedef FixedVector<const char *> options_type;
+#else
+  typedef std::vector<std::string> options_type;
+#endif
   // Hack the basic SelectTraits to allow dynamic management
   // of options from our Select entity without always copying/moving
   class SelectTraits : public esphome::select::SelectTraits {
    public:
-    inline std::vector<std::string> &options() { return this->options_; }
+    inline options_type &options() { return this->options_; }
   };
-
   inline SelectTraits &traits_() { return reinterpret_cast<SelectTraits &>(this->traits); }
 
-  // 'optimized' publish_state bypassing index checks since we're mantaining our
-  // own 'source of truth' in enum_def_
+  // optimized publish_state bypassing index checks since we're mantaining our
+  // own 'options' source of truth in enum_def_
   void publish_enum_(ENUM_DEF::enum_t enum_value);
-  void publish_state_(const std::string &state, size_t index);
-  void publish_state_(size_t index) { this->publish_state_(this->traits_().options()[index], index); }
+  void publish_index_(size_t index);
+  void publish_unknown_();
 };
 
 }  // namespace m3_vedirect

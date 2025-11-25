@@ -65,10 +65,6 @@ class Switch final : public WritableRegister, public esphome::switch_::Switch {
   static void parse_text_bitmask_(Register *hex_register, const char *text_value);
   static void parse_text_enum_(Register *hex_register, const char *text_value);
 #endif
-
-  // optimized publish_state
-  void publish_state_(bool state);
-  void republish_state_();
 };
 
 }  // namespace m3_vedirect

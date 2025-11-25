@@ -1,7 +1,13 @@
 #include "select.h"
 #include "esphome/core/application.h"
+#if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 0)
 #ifdef USE_API
 #include "esphome/components/api/api_server.h"
+#endif
+#else  // ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+#if defined(USE_CONTROLLER_REGISTRY)
+#include "esphome/core/controller_registry.h"
+#endif
 #endif
 
 #include "../manager.h"
@@ -24,10 +30,13 @@ Register *Select::build_entity(Manager *manager, const REG_DEF *reg_def, const c
   auto entity = new Select(manager);
   manager->init_entity(entity, reg_def, name);
   App.register_select(entity);
-#ifdef USE_API
+#if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 0)
+// See https://github.com/esphome/esphome/pull/11772
+#if defined(USE_API)
   entity->add_on_state_callback([entity](const std::string &state, size_t index) {
     api::global_api_server->on_select_update(entity, state, index);
   });
+#endif
 #endif
   return entity;
 }
@@ -35,26 +44,29 @@ Register *Select::build_entity(Manager *manager, const REG_DEF *reg_def, const c
 void Select::link_disconnected_() {
   if (this->has_state()) {
     this->enum_value_ = ENUM_DEF::VALUE_UNKNOWN;
-    this->publish_state_("unknown", -1);
-    this->set_has_state(false);
+    this->publish_unknown_();
   }
 }
 
 void Select::init_reg_def_() {
-  switch (this->reg_def_->cls) {
-    case REG_DEF::CLASS::ENUM:
-      for (auto &lookup_def : this->reg_def_->enum_def->LOOKUPS) {
-        this->traits_().options().push_back(std::string(lookup_def.label));
-      }
+  if (this->reg_def_->cls == REG_DEF::CLASS::ENUM) {
+    std::vector<ENUM_DEF::LOOKUP_DEF> &lookups = this->reg_def_->enum_def->LOOKUPS;
+    auto &options = this->traits_().options();
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+    // See https://github.com/esphome/esphome/pull/11772
+    options.init(lookups.size());
+#else
+    options.clear();
+#endif
+    for (auto &lookup_def : lookups) {
+      options.push_back(lookup_def.label);
+    }
 #if defined(VEDIRECT_USE_HEXFRAME)
-      this->parse_hex_ = parse_hex_enum_;
+    this->parse_hex_ = parse_hex_enum_;
 #endif
 #if defined(VEDIRECT_USE_TEXTFRAME)
-      this->parse_text_ = parse_text_enum_;
+    this->parse_text_ = parse_text_enum_;
 #endif
-      break;
-    default:
-      break;
   }
 }
 
@@ -66,6 +78,26 @@ void Select::parse_enum_(ENUM_DEF::enum_t enum_value) {
 }
 
 void Select::parse_string_(const char *string_value) {
+  // This code is a bit useless since there's no point in managing Select entities
+  // that are not ENUM in VEDirect context...but let's keep it for the sake of
+  // completeness.
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+  if (strcmp(this->current_option(), string_value)) {
+    auto index = this->index_of(string_value);
+    if (index.has_value()) {
+      this->publish_index_(index.value());
+      return;
+    }
+    auto &options = this->traits_().options();
+    FixedVector<const char *> options_old(std::move(options));
+    options.init(options_old.size() + 1);
+    for (const auto &opt : options_old) {
+      options.push_back(opt);
+    }
+    options.push_back(string_value);
+    this->publish_index_(options_old.size());
+  }
+#else
   if (strcmp(this->state.c_str(), string_value)) {
     auto &options = this->traits_().options();
     auto value = std::string(string_value);
@@ -74,32 +106,46 @@ void Select::parse_string_(const char *string_value) {
     if (it == options.end()) {
       options.push_back(value);
     }
-    this->publish_state_(value, index);
+    this->publish_index_(index);
   }
+#endif
 }
 
 #if defined(VEDIRECT_USE_HEXFRAME)
+void Select::control(size_t index) {
+  auto &lookups = this->reg_def_->enum_def->LOOKUPS;
+  if (index < lookups.size()) {
+    this->control_enum_(&lookups[index]);
+  }
+}
+
 void Select::control(const std::string &value) {
   // TODO: are we 100% sure enum_def is defined ? check yaml init code
   auto lookup_def = this->reg_def_->enum_def->lookup_value(value.c_str());
   if (lookup_def) {
-    this->request_set_(lookup_def->value, [this](const HexFrame *frame, uint8_t error) {
-      if (error) {
-        // Error or timeout..resend actual state since it looks like HA esphome does optimistic
-        // updates in it's HA entity instance...
-        if (this->enum_value_ != ENUM_DEF::VALUE_UNKNOWN) {
-          this->publish_enum_(this->enum_value_);
-        }
-      } else {
-        // Invalidate our state so that the subsequent dispatching/parsing goes through
-        // an effective publish_state. This is needed (again) since the frontend already
-        // optimistically updated the entity to the new value but even in case of success,
-        // the device might 'force' a different setting if the request was for an unsupported
-        // ENUM
-        this->enum_value_ = ENUM_DEF::VALUE_UNKNOWN;
-      }
-    });
+    this->control_enum_(lookup_def);
   }
+}
+
+void Select::control_enum_(const ENUM_DEF::LOOKUP_DEF *lookup_def) {
+  this->request_set_(lookup_def->value, [this](const HexFrame *frame, uint8_t error) {
+    if (error) {
+      // Error or timeout..refresh actual state since it looks like HA esphome does optimistic
+      // updates in it's HA entity instance...
+      if (this->enum_value_ == ENUM_DEF::VALUE_UNKNOWN) {
+        this->publish_unknown_();
+      } else {
+        this->publish_enum_(this->enum_value_);
+      }
+    } else {
+      // Invalidate our state so that the subsequent dispatching/parsing goes through
+      // an effective publish_state. This is needed (again) since the frontend already
+      // optimistically updated the entity to the new value but even in case of success,
+      // the device might 'force' a different setting if the request was for an unsupported
+      // ENUM
+      this->enum_value_ = ENUM_DEF::VALUE_UNKNOWN;
+    }
+  });
 }
 
 void Select::parse_hex_default_(Register *hex_register, const RxHexFrame *hex_frame) {
@@ -129,32 +175,54 @@ void Select::parse_text_enum_(Register *hex_register, const char *text_value) {
 #endif  // defined(VEDIRECT_USE_TEXTFRAME)
 
 void Select::publish_enum_(ENUM_DEF::enum_t enum_value) {
-  // the select::traits implementation is so bad...
-  // it would be nice to have a data provider interface though but
-  // this is it and we'd rather not patch the official esphome core.
-  // Here we'll try to mantain sync between our enum_def and the select::options array
-  auto &options = this->traits_().options();
   auto enum_def = this->reg_def_->enum_def;
   auto lookup_result = enum_def->get_lookup(enum_value);
+  auto &options = this->traits_().options();
   if (options.size() != enum_def->LOOKUPS.size()) {
+    // need to rebuild the whole options list since enums might be added in between
     ESP_LOGD(TAG, "'%s': Rebuilding options (prev size %zu, new size %zu)", this->get_name().c_str(), options.size(),
              enum_def->LOOKUPS.size());
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+    // See https://github.com/esphome/esphome/pull/11772
+    options.init(enum_def->LOOKUPS.size());
+#else
     options.clear();
+#endif
     for (auto &lookup_def : enum_def->LOOKUPS) {
-      options.push_back(std::string(lookup_def.label));
+      options.push_back(lookup_def.label);
     }
   }
-  this->publish_state_(lookup_result.index);
+  this->publish_index_(lookup_result.index);
 }
 
-void Select::publish_state_(const std::string &state, size_t index) {
-  // our custom publish_state doesn't really care if the index is correct or not since esphome
-  // discards it anyway when broadcasting through api
+void Select::publish_index_(size_t index) {
   this->set_has_state(true);
-  this->state = state;
-  ESP_LOGD(TAG, "'%s': Sending state %s (index %zu)", this->get_name().c_str(), state.c_str(), index);
-  this->state_callback_.call(state, index);
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+  this->active_index_ = index;
+  ESP_LOGD(TAG, "'%s': Sending state %s (index %zi)", this->get_name().c_str(), this->traits_().options()[index],
+           index);
+#if defined(USE_CONTROLLER_REGISTRY)
+  ControllerRegistry::notify_select_update(this);
+#endif
+#else
+  this->state = this->traits_().options()[index];
+  ESP_LOGD(TAG, "'%s': Sending state %s (index %zi)", this->get_name().c_str(), this->state.c_str(), index);
+#endif
+  this->state_callback_.call(this->traits_().options()[index], index);
 }
 
+void Select::publish_unknown_() {
+  this->set_has_state(false);
+  ESP_LOGD(TAG, "'%s': Sending state 'unknown' (index %zi)", this->get_name().c_str(), static_cast<size_t>(-1));
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+  this->active_index_ = static_cast<size_t>(-1);
+#if defined(USE_CONTROLLER_REGISTRY)
+  ControllerRegistry::notify_select_update(this);
+#endif
+#else
+  this->state = "unknown";
+#endif
+  this->state_callback_.call("", static_cast<size_t>(-1));
+}
 }  // namespace m3_vedirect
 }  // namespace esphome
