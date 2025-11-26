@@ -222,6 +222,7 @@ void set_auto_create_text_entities(bool value) { this->auto_create_text_entities
 /// will be automatically routed. This method is part of the public interface
 /// called by yaml generated code
 /// @param label the name of the TEXT FRAME record to bind
+void init_register(Register *reg, const REG_DEF *reg_def, const char *label);
 void init_register(Register *reg, const char *label);
 #endif  // defined(VEDIRECT_USE_TEXTFRAME)
 // CONFIGURATION END

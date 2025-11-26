@@ -337,11 +337,17 @@ class VEDirectPlatform:
         return config
 
     async def new_vedirect_entity(self, config, manager):
-        entity = cg.new_Pvariable(config[ec.CONF_ID], manager)
+        reg = cg.new_Pvariable(config[ec.CONF_ID], manager)
 
+        # configure binary-like entities
+        if CONF_MASK in config:
+            cg.add(reg.set_mask(config[CONF_MASK]))
+
+        init_args = [reg]
         register_config = config[CONF_REGISTER]
         if isinstance(register_config, str):
-            cg.add(manager.init_register(entity, register_config))
+            init_args.append(register_config)
+
         elif isinstance(register_config, dict):
             register_id = register_config[CONF_ADDRESS]
             if register_id:
@@ -363,7 +369,6 @@ class VEDirectPlatform:
                                 _cls.enum,
                                 cpp.UnaryOpExpression("&", enum_def),
                             )
-
                         case ve_reg.CLASS.NUMERIC:
                             scale = class_config[CONF_SCALE]
                             reg_def = global_object_construct(
@@ -381,26 +386,24 @@ class VEDirectPlatform:
                                 register_config[CONF_DATA_TYPE],
                                 _cls.enum,
                             )
+                    init_args.append(cpp.UnaryOpExpression("&", reg_def))
                     break
             else:
-                reg_def = global_object_construct(
-                    register_config[CONF_REG_DEF_ID],
-                    register_id,
-                    register_config[CONF_DATA_TYPE],
-                    ve_reg.CLASS.VOID.enum,
-                )
-
-            cg.add(manager.init_register(entity, cpp.UnaryOpExpression("&", reg_def)))
+                if register_id or (CONF_TEXT_LABEL not in register_config):
+                    reg_def = global_object_construct(
+                        register_config[CONF_REG_DEF_ID],
+                        register_id,
+                        register_config[CONF_DATA_TYPE],
+                        ve_reg.CLASS.VOID.enum,
+                    )
+                    init_args.append(cpp.UnaryOpExpression("&", reg_def))
 
             if CONF_TEXT_LABEL in register_config:
                 define_use_textframe()
-                cg.add(manager.init_register(entity, register_config[CONF_TEXT_LABEL]))
+                init_args.append(register_config[CONF_TEXT_LABEL])
 
-        # configure binary-like entities
-        if CONF_MASK in config:
-            cg.add(entity.set_mask(config[CONF_MASK]))
-
-        return entity
+        cg.add(manager.init_register(*init_args))
+        return reg
 
     async def to_code(self, config: dict):
         manager = await cg.get_variable(config[CONF_VEDIRECT_ID])

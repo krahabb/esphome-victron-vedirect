@@ -175,16 +175,16 @@ void Manager::init_register(Register *reg, REG_DEF::TYPE register_type) {
 }
 
 #if defined(VEDIRECT_USE_TEXTFRAME)
+void Manager::init_register(Register *reg, const REG_DEF *reg_def, const char *label) {
+  this->init_register(reg, reg_def);
+  this->text_registers_.insert(label, reg);
+}
 void Manager::init_register(Register *reg, const char *label) {
-  if (!reg->reg_def_) {
-    // only set reg_def from our presets (if any) if the yaml generated code
-    // didn't set a custom configuration
-    auto text_def = TEXT_DEF::find_label(label);
-    if (text_def) {
-      auto reg_def = REG_DEF::find_type(text_def->register_type);
-      if (reg_def)
-        this->init_register(reg, reg_def);
-    }
+  auto text_def = TEXT_DEF::find_label(label);
+  if (text_def) {
+    auto reg_def = REG_DEF::find_type(text_def->register_type);
+    if (reg_def)
+      this->init_register(reg, reg_def);
   }
   this->text_registers_.insert(label, reg);
 }
