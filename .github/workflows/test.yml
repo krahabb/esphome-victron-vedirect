@@ -1,0 +1,29 @@
+name: ESPhome CI
+
+on:
+    push:
+    pull_request:
+    workflow_dispatch:
+
+jobs:
+    compile:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v4
+              with:
+                  python-version: '3.13'
+
+            - name: Install ESPhome
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install esphome
+
+            - name: Compile sample configurations
+              run: |
+                  esphome compile ./components/m3_vedirect/docs/samples --all
+              env:
+                  CI: true
