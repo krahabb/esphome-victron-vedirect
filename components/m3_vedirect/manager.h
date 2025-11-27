@@ -104,8 +104,6 @@ class Manager : public uart::UARTDevice, public Component, protected FrameHandle
     Manager *next_;
   };
 
-  typedef std::function<void(const HexFrame *, uint8_t)> request_callback_t;
-
 // dedicated entities to manage component state/behavior
 #ifdef USE_BINARY_SENSOR
   MANAGER_ENTITY_(binary_sensor::BinarySensor, link_connected)
@@ -259,6 +257,7 @@ void send_hexframe(const std::string &rawframe, bool addchecksum = true) {
   this->send_hexframe(rawframe.c_str(), addchecksum);
 }
 
+typedef std::function<void(const HexFrame *, uint8_t)> request_callback_t;
 /// @brief Send an HEX command/request with transaction management
 /// @param command the HEX command to send
 /// @param register_id the register id to use (ignored if command is not GET/SET)

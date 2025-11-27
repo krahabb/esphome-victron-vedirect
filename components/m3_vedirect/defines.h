@@ -1,8 +1,7 @@
 #pragma once
-#include "ve_reg_def.h"
 #include "esphome/core/version.h"
-#include <stddef.h>
-#include <cstring>
+#include "esphome/core/defines.h"
+#include "ve_reg_def.h"
 
 namespace esphome {
 namespace m3_vedirect {
@@ -37,6 +36,15 @@ class Register;
 #ifndef VEDIRECT_TEXTMAP_SIZE
 #define VEDIRECT_TEXTMAP_SIZE 16
 #endif
+
+// fix wrong static_assert behavior in uninstantiated templates
+// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2593r1.html
+// This would actually be needed only for ESP8266 toolchain (xtensa 10.3.0)
+// while ESP32 toolchain seem to behave correctly (as of 2025-11-28).
+template<typename T> struct _assert_false : std::false_type {};
+#define STATIC_ASSERT_FALSE(T) static_assert(_assert_false<T>::value, "This code path should never be compiled.")
+#define TEMPLATE_MEMBER_NEED_OVERRIDE(_Targ, msg) \
+  static_assert(_assert_false<_Targ>::value, msg " must be implemented by derived classes.")
 
 }  // namespace m3_vedirect
 }  // namespace esphome

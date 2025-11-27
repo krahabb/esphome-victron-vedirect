@@ -83,12 +83,14 @@ void Manager::loop() {
     }
   }
 
+#if defined(VEDIRECT_USE_HEXFRAME)
   // Checking requests timeouts
   if (auto request = this->requests_read_) {
     if (request->timeout < millis_) {
       this->request_response_(request, nullptr, Error::TIMEOUT);
     }
   }
+#endif
 }
 
 void Manager::dump_config() {

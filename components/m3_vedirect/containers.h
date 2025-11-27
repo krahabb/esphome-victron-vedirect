@@ -21,9 +21,6 @@ template<typename TKey> struct compare_default {
 /// This abstract class provides the interface for a bucket implementation.
 template<typename TKey, typename TValue, typename TBucket> class Bucket {
  public:
-  // static_assert(std::is_base_of_v<Bucket<TKey, TValue, TBucket>, TBucket>, "TBucket must inherit from Bucket<TKey,
-  // TValue, TBucket>");
-
   using bucket_type = TBucket;
   using value_type = TValue;
 
@@ -46,8 +43,8 @@ template<typename TKey, typename TValue, typename TBucket> class Bucket {
   using allocator_type = Allocator;
 
   TKey bucket_key() const { return this->bucket_key_; }
-  value_type bucket_value() { static_assert(false, "bucket_value must be implemented by derived classes"); }
-  const value_type bucket_value() const { static_assert(false, "bucket_value must be implemented by derived classes"); }
+  value_type bucket_value() { TEMPLATE_MEMBER_NEED_OVERRIDE(TKey, "bucket_value"); }
+  const value_type bucket_value() const { TEMPLATE_MEMBER_NEED_OVERRIDE(TKey, "bucket_value"); }
   bucket_type *bucket_next() const { return this->bucket_next_; }
 
   /// @brief Placeholder implementation for debug dumping
@@ -58,10 +55,7 @@ template<typename TKey, typename TValue, typename TBucket> class Bucket {
   }
 
  protected : Bucket() = default;
-  Bucket(TKey key, TValue value, bucket_type *next) {
-    // placeholder for derived classes
-    static_assert(false, "Bucket constructor must be implemented by derived classes");
-  };
+  Bucket(TKey key, TValue value, bucket_type *next) { TEMPLATE_MEMBER_NEED_OVERRIDE(TKey, "Bucket constructor"); };
   Bucket(TKey key, bucket_type *next) : bucket_key_(key), bucket_next_(next) {}
 
  private:
@@ -178,15 +172,6 @@ class TinyMap {
           this->advance_to_valid_();
       }
       return *this;
-    }
-
-    // Postfix increment
-    iterator operator++(int) {
-      // TODO:: fix or remove
-      static_assert(false, "Postfix increment operator is not supported");
-      iterator tmp = *this;
-      ++(*this);
-      return tmp;
     }
 
     friend bool operator==(const iterator &a, const iterator &b) { return a.p_bucket_ == b.p_bucket_; }
