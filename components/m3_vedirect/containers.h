@@ -7,6 +7,14 @@
 namespace esphome {
 namespace m3_vedirect {
 
+// fix wrong static_assert behavior in uninstantiated templates
+// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2593r1.html
+// This would actually be needed only for ESP8266 toolchain (xtensa 10.3.0)
+// while ESP32 toolchain seem to behave correctly (as of 2025-11-28).
+template<typename T> struct _assert_false : std::false_type {};
+#define TEMPLATE_MEMBER_NEED_OVERRIDE(_Targ, msg) \
+  static_assert(_assert_false<_Targ>::value, msg " must be implemented by derived classes.")
+
 // Basic functors used by our Map implementation.
 /// @brief Hash (default) functor for numeric integral keys.
 template<typename TKey> struct hash_default {
