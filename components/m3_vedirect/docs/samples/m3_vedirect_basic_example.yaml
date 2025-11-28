@@ -5,6 +5,9 @@
 # numeric or binary sensors (or more specialized entities) depending on this knowledge
 # (see 've_reg_text.h' 've_reg_register.h' for clues)
 
+# Substitute with your platform configuration of choice
+<<: !include _m3_vedirect_platform_config.yaml
+
 external_components:
   # source: github://krahabb/esphome # development repo
   source: github://krahabb/esphome-victron-vedirect

@@ -3,6 +3,9 @@
 # Actual entities will be automatically created when the first TEXT frame enters the node so there's
 # no need to provide a definition for eache entity/value in this config file.
 
+# Substitute with your platform configuration of choice
+<<: !include _m3_vedirect_platform_config.yaml
+
 external_components:
   # source: github://krahabb/esphome # development repo
   source: github://krahabb/esphome-victron-vedirect

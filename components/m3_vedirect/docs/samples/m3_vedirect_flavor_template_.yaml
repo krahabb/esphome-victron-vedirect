@@ -1,5 +1,8 @@
 # This file is used as a template for automatic generation of 'flavor' sample configurations.
 
+# Substitute with your platform configuration of choice
+<<: !include _m3_vedirect_platform_config.yaml
+
 external_components:
   # source: github://krahabb/esphome # development repo
   source: github://krahabb/esphome-victron-vedirect

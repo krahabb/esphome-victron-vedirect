@@ -6,13 +6,14 @@
 # (see 've_reg_text.h' 've_reg_register.h' for clues)
 # Also, the ability to send HEX frames commands through an HA service is exposed.
 
+# Substitute with your platform configuration of choice
+<<: !include _m3_vedirect_platform_config.yaml
+
 external_components:
   # source: github://krahabb/esphome # development repo
   source: github://krahabb/esphome-victron-vedirect
 
 api:
-  encryption:
-    key: !secret api_key
   services:
     - service: send_hexframe
       # Parameter 'vedirect_id' must be set to address any of the possibly multiple components defined here.
