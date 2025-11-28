@@ -22,13 +22,29 @@ jobs:
                 python -m pip install --upgrade pip
                 pip install esphome
 
-            - name: Compile sample configurations
+            - name: Compile sample configurations for ESP32
               run: |
                 set -euo pipefail
-                find docs/samples -type f \( -iname '*.yaml' -o -iname '*.yml' \) -print0 | \
+                find docs/samples/* -type f \( -iname '*.yaml' ! -iname '_*.yaml' \) -print0 | \
                 while IFS= read -r -d '' file; do
                   echo "Compiling $file"
-                  esphome compile "$file"
+                  esphome -q -s platform esp32 compile "$file"
                 done
-              env:
-                  CI: true
+
+            - name: Compile sample configurations for ESP32-ARDUINO
+              run: |
+                set -euo pipefail
+                find docs/samples/* -type f \( -iname '*.yaml' ! -iname '_*.yaml' \) -print0 | \
+                while IFS= read -r -d '' file; do
+                  echo "Compiling $file"
+                  esphome -q -s platform esp32_arduino compile "$file"
+                done
+
+            - name: Compile sample configurations for ESP8266
+              run: |
+                set -euo pipefail
+                find docs/samples/* -type f \( -iname '*.yaml' ! -iname '_*.yaml' \) -print0 | \
+                while IFS= read -r -d '' file; do
+                  echo "Compiling $file"
+                  esphome -q -s platform esp8266 compile "$file"
+                done
