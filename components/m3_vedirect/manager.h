@@ -22,6 +22,22 @@
 #include <cstring>
 #include <vector>
 
+// Registers a dynamically created entity with the Application. Entity naming moved
+// over the 2026.x releases:
+// - 2026.1 removed EntityBase::set_object_id (object_id is derived from the name)
+// - 2026.3 removed EntityBase::set_name (no runtime naming API in 2026.3/2026.4)
+// - 2026.5 added App.register_<entity>(obj, name, object_id_hash, entity_fields)
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2026, 5, 0)
+#define VEDIRECT_REGISTER_ENTITY(manager, entity, reg_def, name, type) \
+  App.register_##type(entity, (manager)->build_entity_name(reg_def, name), 0, 0)
+#elif ESPHOME_VERSION_CODE >= VERSION_CODE(2026, 3, 0)
+#define VEDIRECT_REGISTER_ENTITY(manager, entity, reg_def, name, type) App.register_##type(entity)
+#else
+#define VEDIRECT_REGISTER_ENTITY(manager, entity, reg_def, name, type) \
+  (manager)->init_entity(entity, reg_def, name); \
+  App.register_##type(entity)
+#endif
+
 namespace esphome {
 namespace m3_vedirect {
 
@@ -231,6 +247,8 @@ bool is_connected() const { return this->connected_; }
 /// @brief Initialize an entity (Register) with the correct naming/id scheme
 /// when dynamically created by the Manager.
 void init_entity(EntityBase *entity, const REG_DEF *reg_def, const char *name);
+/// @brief Builds the (persistent) name for a dynamically created entity.
+const char *build_entity_name(const REG_DEF *reg_def, const char *name);
 
 bool has_multi_manager() { return Manager::list_->next_ != nullptr; }
 

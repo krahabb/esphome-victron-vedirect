@@ -39,6 +39,7 @@ class Select final : public WritableRegister, public esphome::select::Select {
 #else
   typedef std::vector<std::string> options_type;
 #endif
+#if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 0)
   /// @brief Our custom SelectTraits implementation overrides accessor to allow dynamic
   /// options modifications
   class Traits : public esphome::select::SelectTraits {
@@ -46,6 +47,7 @@ class Select final : public WritableRegister, public esphome::select::Select {
     friend class Select;
     inline options_type &options() { return this->options_; }
   };
+#endif
   /// @brief A fake SelectTraits-like implementation that discards options configuration during component setup
   /// This will be used through member hiding to avoid initial setup of the base class 'traits' member
   class FakeTraits {
@@ -59,7 +61,13 @@ class Select final : public WritableRegister, public esphome::select::Select {
   friend class Manager;
   ENUM_DEF::enum_t enum_value_{ENUM_DEF::VALUE_UNKNOWN};
 
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+  /// @brief Rebuilds the base SelectTraits options from our ENUM_DEF labels
+  /// through the public API (the options storage became immutable in 2026.10).
+  void rebuild_options_();
+#else
   inline Traits &traits_() { return reinterpret_cast<Traits &>(this->esphome::select::Select::traits); }
+#endif
 
   void link_disconnected_() override;
   void init_reg_def_() override;

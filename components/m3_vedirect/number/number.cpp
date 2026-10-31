@@ -18,8 +18,7 @@ Register *Number::build_entity(Manager *manager, const REG_DEF *reg_def, const c
   }
 #endif
   auto entity = new Number(manager);
-  manager->init_entity(entity, reg_def, name);
-  App.register_number(entity);
+  VEDIRECT_REGISTER_ENTITY(manager, entity, reg_def, name, number);
 #if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 0)
 // See https://github.com/esphome/esphome/pull/11772
 #if defined(USE_API)
@@ -41,8 +40,11 @@ void Number::init_reg_def_() {
   switch (reg_def->cls) {
     case REG_DEF::CLASS::NUMERIC:
       this->hex_scale_ = REG_DEF::SCALE_TO_SCALE[reg_def->scale];
+#if ESPHOME_VERSION_CODE < VERSION_CODE(2026, 3, 0)
+      // Since 2026.3 unit_of_measurement/device_class can't be set at runtime anymore.
       this->traits.set_unit_of_measurement(REG_DEF::UNITS[reg_def->unit]);
       this->traits.set_device_class(UNIT_TO_DEVICE_CLASS[reg_def->unit]);
+#endif
       this->traits.set_step(this->hex_scale_);
 #if defined(VEDIRECT_USE_HEXFRAME)
       switch (reg_def->unit) {

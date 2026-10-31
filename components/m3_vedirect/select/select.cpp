@@ -28,8 +28,7 @@ Register *Select::build_entity(Manager *manager, const REG_DEF *reg_def, const c
   }
 #endif
   auto entity = new Select(manager);
-  manager->init_entity(entity, reg_def, name);
-  App.register_select(entity);
+  VEDIRECT_REGISTER_ENTITY(manager, entity, reg_def, name, select);
 #if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 0)
 // See https://github.com/esphome/esphome/pull/11772
 #if defined(USE_API)
@@ -50,17 +49,16 @@ void Select::link_disconnected_() {
 
 void Select::init_reg_def_() {
   if (this->reg_def_->cls == REG_DEF::CLASS::ENUM) {
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+    this->rebuild_options_();
+#else
     std::vector<ENUM_DEF::LOOKUP_DEF> &lookups = this->reg_def_->enum_def->LOOKUPS;
     auto &options = this->traits_().options();
-#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
-    // See https://github.com/esphome/esphome/pull/11772
-    options.init(lookups.size());
-#else
     options.clear();
-#endif
     for (auto &lookup_def : lookups) {
       options.push_back(lookup_def.label);
     }
+#endif
 #if defined(VEDIRECT_USE_HEXFRAME)
     this->parse_hex_ = parse_hex_enum_;
 #endif
@@ -82,21 +80,22 @@ void Select::parse_string_(const char *string_value) {
   // that are not ENUM in VEDirect context...but let's keep it for the sake of
   // completeness.
 #if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
-  if (strcmp(this->current_option(), string_value)) {
-    auto index = this->index_of(string_value);
-    if (index.has_value()) {
+  auto index = this->index_of(string_value);
+  if (index.has_value()) {
+    if (!this->has_state() || (this->active_index_ != index.value()))
       this->publish_index_(index.value());
-      return;
-    }
-    auto &options = this->traits_().options();
-    FixedVector<const char *> options_old(std::move(options));
-    options.init(options_old.size() + 1);
-    for (const auto &opt : options_old) {
-      options.push_back(opt);
-    }
-    options.push_back(string_value);
-    this->publish_index_(options_old.size());
+    return;
   }
+  const auto &options_old = this->esphome::select::Select::traits.get_options();
+  FixedVector<const char *> options;
+  options.init(options_old.size() + 1);
+  for (const char *option : options_old) {
+    options.push_back(option);
+  }
+  // SelectTraits only stores the pointers: the label must outlive the entity
+  options.push_back(strdup(string_value));
+  this->esphome::select::Select::traits.set_options(options);
+  this->publish_index_(options.size() - 1);
 #else
   if (strcmp(this->state.c_str(), string_value)) {
     auto &options = this->traits_().options();
@@ -177,39 +176,52 @@ void Select::parse_text_enum_(Register *hex_register, const char *text_value) {
 void Select::publish_enum_(ENUM_DEF::enum_t enum_value) {
   auto enum_def = this->reg_def_->enum_def;
   auto lookup_result = enum_def->get_lookup(enum_value);
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+  if (this->size() != enum_def->LOOKUPS.size()) {
+    // need to rebuild the whole options list since enums might be added in between
+    ESP_LOGD(TAG, "'%s': Rebuilding options (prev size %zu, new size %zu)", this->get_name().c_str(), this->size(),
+             enum_def->LOOKUPS.size());
+    this->rebuild_options_();
+  }
+#else
   auto &options = this->traits_().options();
   if (options.size() != enum_def->LOOKUPS.size()) {
     // need to rebuild the whole options list since enums might be added in between
     ESP_LOGD(TAG, "'%s': Rebuilding options (prev size %zu, new size %zu)", this->get_name().c_str(), options.size(),
              enum_def->LOOKUPS.size());
-#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
-    // See https://github.com/esphome/esphome/pull/11772
-    options.init(enum_def->LOOKUPS.size());
-#else
     options.clear();
-#endif
     for (auto &lookup_def : enum_def->LOOKUPS) {
       options.push_back(lookup_def.label);
     }
   }
+#endif
   this->publish_index_(lookup_result.index);
 }
 
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
+void Select::rebuild_options_() {
+  auto &lookups = this->reg_def_->enum_def->LOOKUPS;
+  FixedVector<const char *> options;
+  options.init(lookups.size());
+  for (auto &lookup_def : lookups) {
+    options.push_back(lookup_def.label);
+  }
+  this->esphome::select::Select::traits.set_options(options);
+}
+
+void Select::publish_index_(size_t index) {
+  ESP_LOGD(TAG, "'%s': Sending state %s (index %zi)", this->get_name().c_str(), this->option_at(index), index);
+  // the base implementation updates the state, runs the callbacks and notifies the controllers (api)
+  this->publish_state(index);
+}
+#else
 void Select::publish_index_(size_t index) {
   this->set_has_state(true);
-#if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
-  this->active_index_ = index;
-  ESP_LOGD(TAG, "'%s': Sending state %s (index %zi)", this->get_name().c_str(), this->traits_().options()[index],
-           index);
-#if defined(USE_CONTROLLER_REGISTRY)
-  ControllerRegistry::notify_select_update(this);
-#endif
-#else
   this->state = this->traits_().options()[index];
   ESP_LOGD(TAG, "'%s': Sending state %s (index %zi)", this->get_name().c_str(), this->state.c_str(), index);
-#endif
   this->state_callback_.call(this->traits_().options()[index], index);
 }
+#endif
 
 void Select::publish_unknown_() {
   this->set_has_state(false);
@@ -222,7 +234,11 @@ void Select::publish_unknown_() {
 #else
   this->state = "unknown";
 #endif
+#if ESPHOME_VERSION_CODE < VERSION_CODE(2026, 1, 0)
+  // since 2026.1 the state callback only carries the index and listeners would
+  // look up option_at(index): don't notify an invalid index
   this->state_callback_.call("", static_cast<size_t>(-1));
+#endif
 }
 }  // namespace m3_vedirect
 }  // namespace esphome
