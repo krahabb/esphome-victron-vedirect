@@ -141,6 +141,8 @@ class Manager : public uart::UARTDevice, public Component, protected FrameHandle
 #if defined(VEDIRECT_USE_HEXFRAME)
   void set_auto_create_hex_entities(bool value) { this->auto_create_hex_entities_ = value; }
   void set_ping_timeout(uint32_t seconds) { this->ping_timeout_ = seconds * 1000; }
+  /// @brief Periodically re-read all the configured HEX registers (0 = only on connection)
+  void set_polling_interval(uint32_t millis) { this->polling_interval_ = millis; }
 
   void add_on_frame_callback(std::function<void(const HexFrame &)> &&callback) {
     this->hexframe_callback_.add(std::move(callback));
@@ -309,6 +311,9 @@ bool auto_create_hex_entities_{false};
 int ping_timeout_{VEDIRECT_PING_TIMEOUT_MILLIS};
 
 int last_ping_tx_{0};
+int polling_interval_{0};
+int last_polling_{0};
+bool polling_constants_{true};
 
 // @todo: move to a conditional compilation so we only add this code when actually used
 friend class HexFrameTrigger;
@@ -329,6 +334,8 @@ void request_response_(Request *request, const HexFrame *response, Error error);
 /// @brief Polling context for HEX registers on connection
 HexRegistersMap::iterator polling_registers_it_;
 void poll_next_register_();
+void start_polling_(bool constants);
+void skip_polling_constants_();
 
 void on_frame_hex_(const RxHexFrame &hexframe) override;
 void on_frame_hex_error_(FrameHandler::Error error) override;

@@ -44,8 +44,22 @@ number:
         name: "ALARM_LOW_VOLTAGE_SET"
       - register: ALARM_LOW_VOLTAGE_CLEAR
         name: "ALARM_LOW_VOLTAGE_CLEAR"
+      - register: AC_LOAD_SENSE_POWER_THRESHOLD
+        name: "AC_LOAD_SENSE_POWER_THRESHOLD"
+      - register: AC_LOAD_SENSE_POWER_CLEAR
+        name: "AC_LOAD_SENSE_POWER_CLEAR"
       - register: SHUTDOWN_LOW_VOLTAGE_SET
         name: "SHUTDOWN_LOW_VOLTAGE_SET"
+      - register: INV_ECO_LOAD_DETECT_PERIODS
+        name: "INV_ECO_LOAD_DETECT_PERIODS"
+      - register: INV_DYN_CUTOFF_FACTOR5
+        name: "INV_DYN_CUTOFF_FACTOR5"
+      - register: INV_DYN_CUTOFF_FACTOR250
+        name: "INV_DYN_CUTOFF_FACTOR250"
+      - register: INV_DYN_CUTOFF_FACTOR2000
+        name: "INV_DYN_CUTOFF_FACTOR2000"
+      - register: INV_DYN_CUTOFF_FACTOR
+        name: "INV_DYN_CUTOFF_FACTOR"
       - register: VOLTAGE_COMPENSATION
         name: "VOLTAGE_COMPENSATION"
       - register: BAT_LOW_TEMP_LEVEL
@@ -89,6 +103,10 @@ select:
         name: "RELAY_MODE"
       - register: REMOTE_INPUT_MODE_CONFIG
         name: "REMOTE_INPUT_MODE_CONFIG"
+      - register: INV_AC_OUT_FREQUENCY
+        name: "INV_AC_OUT_FREQUENCY"
+      - register: INV_NVM_COMMAND
+        name: "INV_NVM_COMMAND"
       - register: BAT_VOLTAGE_SETTING
         name: "BAT_VOLTAGE_SETTING"
       - register: BAT_TYPE
@@ -144,6 +162,10 @@ sensor:
         name: "UNKNOWN_D5CA"
       - register: UNKNOWN_D5CB
         name: "UNKNOWN_D5CB"
+      - register: INV_DC_CURRENT
+        name: "INV_DC_CURRENT"
+      - register: INV_DYN_CUTOFF_VOLTAGE
+        name: "INV_DYN_CUTOFF_VOLTAGE"
       - register: PANEL_VOLTAGE_1
         name: "PANEL_VOLTAGE_1"
       - register: PANEL_POWER_1
@@ -219,6 +241,8 @@ switch:
     vedirect_entities:
       - register: RELAY_CONTROL
         name: "RELAY_CONTROL"
+      - register: INV_DYN_CUTOFF_ENABLE
+        name: "INV_DYN_CUTOFF_ENABLE"
       - register: AUTO_EQUALISE_STOP_ON_VOLTAGE
         name: "AUTO_EQUALISE_STOP_ON_VOLTAGE"
       - register: BMS_PRESENT

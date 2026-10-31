@@ -16,6 +16,7 @@ jobs:
                     - m3_vedirect_service_example.yaml
                     - m3_vedirect_minimal_example.yaml
                     - m3_vedirect_flavor_ALL_example.yaml
+                    - m3_vedirect_phoenix_inverter_example.yaml
                 platform: 
                   - esp32
                   - esp32-arduino

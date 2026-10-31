@@ -1,0 +1,149 @@
+# Phoenix Inverter (VE.Direct) example: monitoring plus the user settings that
+# VictronConnect exposes (low battery thresholds, dynamic cut-off, Eco mode).
+# Register reference: 'VE.Direct Protocol Phoenix Inverters' by Victron Energy.
+
+# Substitute with your platform configuration of choice
+<<: !include _m3_vedirect_platform_config.yaml
+
+external_components:
+  source: github://krahabb/esphome-victron-vedirect
+
+uart:
+  - id: uart_0
+    tx_pin: GPIO4
+    rx_pin: GPIO5
+    baud_rate: 19200
+    rx_buffer_size: 256
+
+m3_vedirect:
+  - id: vedirect_0
+    uart_id: uart_0
+    name: "Phoenix"
+    flavor: [INV_PHNX]
+    textframe:
+      auto_create_entities: false
+    hexframe:
+      auto_create_entities: false
+      ping_timeout: 2min
+      # Phoenix inverters don't broadcast HEX registers: re-read them periodically
+      # (e.g. the effective dynamic cut-off voltage changes with the load)
+      polling_interval: 30s
+
+binary_sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    link_connected:
+      name: "VE.Direct link"
+
+sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    vedirect_entities:
+      - register: DC_CHANNEL1_VOLTAGE
+        name: "Battery voltage"
+      - register: AC_OUT_VOLTAGE
+        name: "AC out voltage"
+      - register: AC_OUT_CURRENT
+        name: "AC out current"
+      - register: AC_OUT_APPARENT_POWER
+        name: "AC out apparent power"
+      - register: INV_DC_CURRENT
+        name: "Inverter DC current"
+      - register: INV_DYN_CUTOFF_VOLTAGE
+        name: "Dynamic cut-off voltage"
+
+# User settings: changes are applied immediately but they're lost on the next
+# inverter restart unless saved with the 'NVM command' select (save).
+number:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    vedirect_entities:
+      - register: SHUTDOWN_LOW_VOLTAGE_SET
+        name: "Low battery shutdown voltage"
+        min_value: 9.3
+        max_value: 17
+        step: 0.01
+      - register: ALARM_LOW_VOLTAGE_SET
+        name: "Low battery alarm voltage"
+        min_value: 9.3
+        max_value: 17
+        step: 0.01
+      - register: ALARM_LOW_VOLTAGE_CLEAR
+        name: "Low battery restart voltage"
+        min_value: 9.3
+        max_value: 17
+        step: 0.01
+      - register: AC_OUT_VOLTAGE_SETPOINT
+        name: "AC output voltage setpoint"
+        min_value: 210
+        max_value: 245
+        step: 0.01
+      - register: INV_DYN_CUTOFF_FACTOR5
+        name: "Dynamic cut-off voltage low current"
+        min_value: 9.3
+        max_value: 17
+        step: 0.01
+      - register: INV_DYN_CUTOFF_FACTOR250
+        name: "Dynamic cut-off voltage mid current"
+        min_value: 9.3
+        max_value: 17
+        step: 0.01
+      - register: INV_DYN_CUTOFF_FACTOR2000
+        name: "Dynamic cut-off voltage high current"
+        min_value: 9.3
+        max_value: 17
+        step: 0.01
+      - register: AC_LOAD_SENSE_POWER_THRESHOLD
+        name: "Eco search power threshold"
+        min_value: 0
+        max_value: 250
+        step: 1
+      - register: AC_LOAD_SENSE_POWER_CLEAR
+        name: "Eco search power clear"
+        min_value: 0
+        max_value: 250
+        step: 1
+
+switch:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    vedirect_entities:
+      - register: INV_DYN_CUTOFF_ENABLE
+        name: "Dynamic cut-off"
+
+select:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    vedirect_entities:
+      # Phoenix inverters only support these DEVICE_MODE values
+      - register:
+          address: 0x0200
+          data_type: UN8
+          enum:
+            - 2: "On"
+            - 4: "Off"
+            - 5: "Eco"
+        name: "Mode"
+      - register: INV_AC_OUT_FREQUENCY
+        name: "AC output frequency"
+      - register: INV_NVM_COMMAND
+        name: "NVM command"
+
+text_sensor:
+  - platform: m3_vedirect
+    vedirect_id: vedirect_0
+    vedirect_entities:
+      - register: DEVICE_STATE
+        name: "State"
+      - register: DEVICE_OFF_REASON_2
+        name: "Off reason"
+      - register: WARNING_REASON
+        name: "Warning"
+      - register: ALARM_REASON
+        name: "Alarm"
+      - register: MODEL_NAME
+        name: "Model"
+      - register: SERIAL_NUMBER
+        name: "Serial number"
+      - register: APP_VER
+        name: "Firmware version"

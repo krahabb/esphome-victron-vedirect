@@ -68,6 +68,11 @@
   ENUM(starting_up, 0xF5), ENUM(repeated_absorption, 0xF6), ENUM(auto_equalize, 0xF7), \
   ENUM(battery_safe, 0xF8), ENUM(external_control, 0xFC), ENUM(unknown, 0xFF),
 
+#define ENUM_INV_AC_OUT_FREQUENCY(ENUM) ENUM(freq_60hz, 0), ENUM(freq_50hz, 1),
+
+#define ENUM_INV_NVM_COMMAND(ENUM) \
+  ENUM(none, 0), ENUM(save, 1), ENUM(revert, 2), ENUM(backup, 3), ENUM(defaults, 4),
+
 #define ENUM_MPPT_TRACKER_MODE(ENUM) \
   ENUM(off, 0x00), ENUM(v_i_limited, 0x01), ENUM(mppt, 0x02),
 
