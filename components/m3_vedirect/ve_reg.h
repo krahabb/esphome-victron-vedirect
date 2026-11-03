@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <cstring>  // memcpy: unaligned-safe reads (ESP8266)
 /// @brief m3_ve_reg namespace is a collection of api's independent of esphome
 /// (so that it could esily be used as a library) . It's purpose is to provide a
 /// framework to manage vedirect registers through both HEX frames and TEXT frames
@@ -60,10 +61,16 @@ struct HEXFRAME {
   };
 
   // member helper for generalized casting of payload data
-  template<typename Tcast, typename Traw> Tcast get_data_t() { return static_cast<Tcast>(*(Traw *) this->data); }
+  template<typename Tcast, typename Traw> Tcast get_data_t() {
+    Traw raw;
+    memcpy(&raw, this->data, sizeof(Traw));
+    return static_cast<Tcast>(raw);
+  }
   // static helper for generalized casting of payload data
   template<typename Tcast, typename Traw> static Tcast get_data_t(const HEXFRAME *hexframe) {
-    return static_cast<Tcast>(*(Traw *) hexframe->data);
+    Traw raw;
+    memcpy(&raw, hexframe->data, sizeof(Traw));
+    return static_cast<Tcast>(raw);
   }
 
   typedef int (*get_data_int_func_t)(const HEXFRAME *);

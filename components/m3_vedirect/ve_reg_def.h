@@ -13,7 +13,9 @@ namespace m3_ve_reg {
 
 // clang-format on
 
-#pragma pack(push, 1)
+// Note: these definitions must not be packed. ENUM_DEF/BITMASK_DEF hold a std::vector and
+// packing places such globals at unaligned addresses, which crashes ESP8266 (Exception 9)
+// in their static constructors.
 
 /// @brief Base class acting as 'enum helper' for registers containing enumerated values
 struct ENUM_DEF {
@@ -245,7 +247,5 @@ struct TEXT_DEF {
   static const TEXT_DEF *find_label(const char *label);
   static const TEXT_DEF *find_type(REG_DEF::TYPE register_type);
 };
-
-#pragma pack(pop)
 
 }  // namespace m3_ve_reg
