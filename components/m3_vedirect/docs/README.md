@@ -19,6 +19,9 @@ The first document being the overall technical description and explaining what i
 Sadly enough, beside those few documents, Victron doesn't expose a very detailed 'implementation manual' for every device/family, especially the new ones (like the RS families of devices for instance) so, many times you'll have to infer or guess how to interface with these by looking at their most close counterparts for which documentation is available. As an example, I'm using this code and the knowledge from those docs to succesfully (at least partially) interface a Multi RS inverter which contains both MPPTs and INVERTERs features (plus many which are very specific and for which there's no official doc available).
 At any rate, for basic sensor readings and configuration those documents are enough since, even among different devices and classes, the configuration registers are pretty almost the same.
 
+## Warning
+This component was developed right before last year's EspHome core deep design changes and I was struggling to mantain support for updates. Recent PR from external contributors (Thanks to @olicooper and @divomen) should have fixed the majority of the compatibility issues.
+
 ## How to use
 In order to include the component in your EspHome project use the [instructions](https://esphome.io/components/external_components). Something in the lines:
 ```yaml
