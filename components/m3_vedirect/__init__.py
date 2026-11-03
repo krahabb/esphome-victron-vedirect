@@ -447,6 +447,7 @@ def validate_manager(config):
 
 CONF_AUTO_CREATE_ENTITIES = "auto_create_entities"
 CONF_PING_TIMEOUT = "ping_timeout"
+CONF_POLLING_INTERVAL = "polling_interval"
 CONF_FLAVOR = "flavor"
 CONF_ON_FRAME_RECEIVED = "on_frame_received"
 CONFIG_SCHEMA = (
@@ -466,6 +467,9 @@ CONFIG_SCHEMA = (
                 {
                     cv.Optional(CONF_AUTO_CREATE_ENTITIES): cv.boolean,
                     cv.Optional(CONF_PING_TIMEOUT): cv.positive_time_period_seconds,
+                    cv.Optional(
+                        CONF_POLLING_INTERVAL
+                    ): cv.positive_time_period_milliseconds,
                     cv.Optional(CONF_ON_FRAME_RECEIVED): automation.validate_automation(
                         {
                             cv.GenerateID(ec.CONF_TRIGGER_ID): cv.declare_id(
@@ -524,6 +528,8 @@ async def to_code(config: dict):
             )
         if CONF_PING_TIMEOUT in config_hexframe:
             cg.add(var.set_ping_timeout(config_hexframe[CONF_PING_TIMEOUT]))
+        if CONF_POLLING_INTERVAL in config_hexframe:
+            cg.add(var.set_polling_interval(config_hexframe[CONF_POLLING_INTERVAL]))
 
         for conf in config_hexframe.get(CONF_ON_FRAME_RECEIVED, []):
             trigger = cg.new_Pvariable(conf[ec.CONF_TRIGGER_ID], var)
@@ -537,10 +543,13 @@ async def to_code(config: dict):
 
 # ACTIONS
 
+# a single validator instance so it can be looked up in _CTYPE_VALIDATOR_MAP
+_validate_register_id = validate_register_id()
+
 _CTYPE_VALIDATOR_MAP = {
     cv.string: cg.std_string,
     cv.int_: cg.int_,
-    validate_register_id: cg.uint16,
+    _validate_register_id: cg.uint16,
 }
 
 
@@ -571,7 +580,7 @@ MANAGER_ACTIONS = {
     "send_command": {
         cv.Optional(CONF_VEDIRECT_ID, default=""): cv.string,
         cv.Required(CONF_COMMAND): cv.int_,
-        cv.Optional(CONF_REGISTER_ID): validate_register_id,
+        cv.Optional(CONF_REGISTER_ID): _validate_register_id,
         cv.Optional(ec.CONF_DATA): cv.int_,
         cv.Optional(CONF_DATA_SIZE): cv.int_,
     },

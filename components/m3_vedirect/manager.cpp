@@ -90,6 +90,11 @@ void Manager::loop() {
       this->request_response_(request, nullptr, Error::TIMEOUT);
     }
   }
+
+  if (this->polling_interval_ && this->connected_ && !this->is_polling() &&
+      ((millis_ - this->last_polling_) > this->polling_interval_)) {
+    this->start_polling_(false);
+  }
 #endif
 }
 
@@ -283,14 +288,7 @@ void Manager::on_connected_() {
   ESP_LOGD(this->logtag_, "LINK: connected");
   this->connected_ = true;
 #if defined(VEDIRECT_USE_HEXFRAME)
-  auto polling_size = this->hex_registers_.size();
-  if (polling_size) {
-    ESP_LOGD(this->logtag_, "Polling begin (%d registers)", polling_size);
-    this->polling_registers_it_ = this->hex_registers_.begin();
-    if (!this->is_request_pending()) {
-      this->poll_next_register_();
-    }  // else let the transaction management advance the polling
-  }
+  this->start_polling_(true);
 #endif
 #ifdef USE_BINARY_SENSOR
   if (auto link_connected = this->link_connected_) {
@@ -378,15 +376,47 @@ void Manager::request_response_(Request *request, const HexFrame *response, Erro
   }
 }
 
+/// @brief Starts a polling cycle over all of the configured HEX registers.
+/// @param constants false to skip the pre-defined CONSTANT registers (periodic polling)
+void Manager::start_polling_(bool constants) {
+  this->last_polling_ = millis();
+  this->polling_constants_ = constants;
+  auto polling_size = this->hex_registers_.size();
+  if (polling_size) {
+    ESP_LOGD(this->logtag_, "Polling begin (%d registers)", polling_size);
+    this->polling_registers_it_ = this->hex_registers_.begin();
+    this->skip_polling_constants_();
+    if (this->is_polling() && !this->is_request_pending()) {
+      this->poll_next_register_();
+    }  // else let the transaction management advance the polling
+  }
+}
+
+void Manager::skip_polling_constants_() {
+  // Pre-defined CONSTANT registers (serial number, firmware version, ...) only need to be
+  // read once on connection. Custom registers are always polled since their definition
+  // defaults to CONSTANT access when not known.
+  if (this->polling_constants_)
+    return;
+  for (; !this->polling_registers_it_.is_end(); ++this->polling_registers_it_) {
+    auto reg_def = this->polling_registers_it_->get_reg_def();
+    if (!reg_def || (reg_def->access != REG_DEF::ACCESS::CONSTANT) || (reg_def < REG_DEF::DEFS) ||
+        (reg_def >= REG_DEF::DEFS + REG_DEF::TYPE::TYPE_COUNT))
+      break;
+  }
+}
+
 void Manager::poll_next_register_() {
   // TODO: skip already updated registers and/or TEXT registers
   register_id_t register_id = this->polling_registers_it_->bucket_key();
   this->request_get(register_id, [this, register_id](const HexFrame *, uint8_t) {
     while (register_id == this->polling_registers_it_->bucket_key()) {
-      if ((++this->polling_registers_it_).is_end()) {
-        ESP_LOGD(this->logtag_, "Polling end");
+      if ((++this->polling_registers_it_).is_end())
         break;
-      }
+    }
+    this->skip_polling_constants_();
+    if (this->polling_registers_it_.is_end()) {
+      ESP_LOGD(this->logtag_, "Polling end");
     }
   });
 }
