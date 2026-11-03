@@ -20,8 +20,7 @@ Register *Switch::build_entity(Manager *manager, const REG_DEF *reg_def, const c
   }
 #endif
   auto entity = new Switch(manager);
-  manager->init_entity(entity, reg_def, name);
-  App.register_switch(entity);
+  VEDIRECT_REGISTER_ENTITY(manager, entity, reg_def, name, switch);
 #if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 0)
 // See https://github.com/esphome/esphome/pull/11772
 #if defined(USE_API)

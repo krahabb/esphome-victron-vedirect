@@ -35,8 +35,7 @@ Register *Sensor::build_entity(Manager *manager, const REG_DEF *reg_def, const c
   }
 #endif
   auto entity = new Sensor(manager);
-  manager->init_entity(entity, reg_def, name);
-  App.register_sensor(entity);
+  VEDIRECT_REGISTER_ENTITY(manager, entity, reg_def, name, sensor);
 #if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 0)
 // See https://github.com/esphome/esphome/pull/11772
 #if defined(USE_API)
@@ -60,8 +59,12 @@ void Sensor::init_reg_def_() {
 #endif
   switch (reg_def->cls) {
     case REG_DEF::CLASS::NUMERIC:
+#if ESPHOME_VERSION_CODE < VERSION_CODE(2026, 3, 0)
+      // Since 2026.3 unit_of_measurement/device_class are indexes into a codegen string
+      // table and can't be set at runtime anymore: configure them in yaml instead.
       this->set_unit_of_measurement(REG_DEF::UNITS[reg_def->unit]);
       this->set_device_class(UNIT_TO_DEVICE_CLASS[reg_def->unit]);
+#endif
       this->set_state_class(UNIT_TO_STATE_CLASS[reg_def->unit]);
       this->set_accuracy_decimals(SCALE_TO_DIGITS[reg_def->scale]);
       this->hex_scale_ = REG_DEF::SCALE_TO_SCALE[reg_def->scale];
@@ -102,7 +105,7 @@ void Sensor::parse_hex_default_(Register *hex_register, const RxHexFrame *hex_fr
       sensor->parse_hex_ = parse_hex_t_<uint32_t>;
       break;
     default:
-      if (!std::isnan(sensor->raw_state)) {
+      if (!std::isnan(sensor->get_raw_state())) {
         sensor->publish_state(NAN);
       }
       return;
@@ -114,13 +117,13 @@ void Sensor::parse_hex_kelvin_(Register *hex_register, const RxHexFrame *hex_fra
   Sensor *sensor = static_cast<Sensor *>(hex_register);
   uint16_t raw_value = hex_frame->data_t<uint16_t>();
   if (raw_value == HEXFRAME::DATA_UNKNOWN<uint16_t>()) {
-    if (!std::isnan(sensor->raw_state)) {
+    if (!std::isnan(sensor->get_raw_state())) {
       sensor->publish_state(NAN);
     }
   } else {
     // hoping the operands are int-promoted and the result is an int
     float value = (raw_value - 27316) * sensor->hex_scale_;
-    if (sensor->raw_state != value) {
+    if (sensor->get_raw_state() != value) {
       sensor->publish_state(value);
     }
   }
@@ -131,12 +134,12 @@ template<typename T> void Sensor::parse_hex_t_(Register *hex_register, const RxH
   Sensor *sensor = static_cast<Sensor *>(hex_register);
   T raw_value = hex_frame->data_t<T>();
   if (raw_value == HEXFRAME::DATA_UNKNOWN<T>()) {
-    if (!std::isnan(sensor->raw_state)) {
+    if (!std::isnan(sensor->get_raw_state())) {
       sensor->publish_state(NAN);
     }
   } else {
     float value = raw_value * sensor->hex_scale_;
-    if (sensor->raw_state != value) {
+    if (sensor->get_raw_state() != value) {
       sensor->publish_state(value);
     }
   }
@@ -156,11 +159,11 @@ void Sensor::parse_text_default_(Register *hex_register, const char *text_value)
   float value = strtof(text_value, &endptr) * sensor->text_scale_;
   if (*endptr) {
     // failed conversion
-    if (!std::isnan(sensor->raw_state)) {
+    if (!std::isnan(sensor->get_raw_state())) {
       sensor->publish_state(NAN);
     }
   } else {
-    if (sensor->raw_state != value) {
+    if (sensor->get_raw_state() != value) {
       sensor->publish_state(value);
     }
   }

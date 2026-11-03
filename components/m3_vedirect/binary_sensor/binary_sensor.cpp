@@ -20,8 +20,7 @@ Register *BinarySensor::build_entity(Manager *manager, const REG_DEF *reg_def, c
   }
 #endif
   auto entity = new BinarySensor(manager);
-  manager->init_entity(entity, reg_def, name);
-  App.register_binary_sensor(entity);
+  VEDIRECT_REGISTER_ENTITY(manager, entity, reg_def, name, binary_sensor);
 #if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 0)
 // See https://github.com/esphome/esphome/pull/11772
 #if defined(USE_API)
