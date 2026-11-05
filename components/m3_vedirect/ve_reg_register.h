@@ -37,6 +37,11 @@
 */
 #pragma once
 #include "ve_reg_flavor.h"
+
+namespace esphome {
+namespace m3_vedirect {
+namespace m3_ve_reg {
+
 // clang-format off
 
 #define REGISTERS_COMMON(MACRO) \
@@ -165,3 +170,6 @@
   MACRO(BMV, BOOLEAN, 0xEEFC, ALARM_BUZZER, READ_WRITE)
 
 // clang-format on
+}  // namespace m3_ve_reg
+}  // namespace m3_vedirect
+}  // namespace esphome

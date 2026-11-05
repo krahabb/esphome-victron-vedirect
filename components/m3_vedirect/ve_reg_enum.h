@@ -1,5 +1,9 @@
 #pragma once
 
+namespace esphome {
+namespace m3_vedirect {
+namespace m3_ve_reg {
+
 // clang-format off
 
 #define ENUM_BAT_VOLTAGE_SETTING(ENUM) \
@@ -7,7 +11,7 @@
 
 // BAT_TYPE enum depends on the device type so we're just providing a 'defective' common definition
 #define ENUM_BAT_TYPE(ENUM) \
-  ENUM(user, 0xFF), 
+  ENUM(user, 0xFF),
 
 #define BITMASK_BLE_MODE(ENUM) \
   ENUM(enabled, 0x00),
@@ -94,3 +98,6 @@
   ENUM(short_circuit, 0x0C), ENUM(bms_lockout, 0x0D),
 
 // clang-format on
+}  // namespace m3_ve_reg
+}  // namespace m3_vedirect
+}  // namespace esphome

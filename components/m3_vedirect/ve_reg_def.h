@@ -7,6 +7,8 @@
 #include "ve_reg_register.h"
 #include "ve_reg_text.h"
 
+namespace esphome {
+namespace m3_vedirect {
 namespace m3_ve_reg {
 
 // clang-format off
@@ -249,3 +251,5 @@ struct TEXT_DEF {
 };
 
 }  // namespace m3_ve_reg
+}  // namespace m3_vedirect
+}  // namespace esphome

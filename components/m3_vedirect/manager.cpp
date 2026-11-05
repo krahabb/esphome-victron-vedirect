@@ -49,8 +49,9 @@ Manager *Manager::StaticIterator::next() {
 
 void Manager::setup() {
   if (this->has_multi_manager()) {
-    char *buf = new char[sizeof(TAG) + strlen(this->vedirect_id_) + 1];
-    sprintf(buf, FMT_JOIN_UNDERSCORE, TAG, this->vedirect_id_);
+    auto buf_size = sizeof(TAG) + strlen(this->vedirect_id_) + 1;
+    char *buf = new char[buf_size];
+    snprintf(buf, buf_size, FMT_JOIN_UNDERSCORE, TAG, this->vedirect_id_);
     this->logtag_ = buf;
   } else {
     this->logtag_ = TAG;
@@ -100,8 +101,7 @@ void Manager::loop() {
 
 void Manager::dump_config() {
 #if defined(VEDIRECT_USE_TEXTFRAME)
-  HexRegistersMap::stats stats;
-  TextRegistersMap::stats text_stats;
+  TinyMapBase::stats stats;
   const char *map_name;
   for (int i = 0; i < 2; ++i) {
     switch (i) {
@@ -110,8 +110,7 @@ void Manager::dump_config() {
         map_name = "HEX";
         break;
       case 1:
-        text_stats = this->text_registers_.get_stats();
-        memcpy(&stats, &text_stats, sizeof(stats));
+        stats = this->text_registers_.get_stats();
         map_name = "TEXT";
         break;
     }
@@ -128,36 +127,36 @@ void Manager::dump_config() {
 #endif
 
 #if defined(ESPHOME_LOG_HAS_VERBOSE)
-  std::string dump("HEXMAP:");
+  StaticStringBuffer<512> string_buffer;
+  string_buffer.add("HEXMAP:");
   for (int i = 0; i < this->hex_registers_.map_size; ++i) {
     if (this->hex_registers_.bucket_empty(i))
       continue;
-    dump += "\n";
-    dump += this->hex_registers_.bucket_dump(i);
-    if (dump.length() > 400) {
-      ESP_LOGCONFIG(this->logtag_, "%s", dump.c_str());
-      dump.clear();
+    string_buffer.add("\n");
+    this->hex_registers_.bucket_dump_to(string_buffer, i);
+    if (string_buffer.length() > 400) {
+      ESP_LOGCONFIG(this->logtag_, "%s", string_buffer.c_str());
+      string_buffer.clear();
     }
   }
-  if (dump.length()) {
-    ESP_LOGCONFIG(this->logtag_, "%s", dump.c_str());
-    dump.clear();
+  if (string_buffer.length()) {
+    ESP_LOGCONFIG(this->logtag_, "%s", string_buffer.c_str());
+    string_buffer.clear();
   }
 #if defined(VEDIRECT_USE_TEXTFRAME)
-  dump = "TEXTMAP:";
+  string_buffer.add("TEXTMAP:");
   for (int i = 0; i < this->text_registers_.map_size; ++i) {
     if (this->text_registers_.bucket_empty(i))
       continue;
-    dump += "\n";
-    dump += this->text_registers_.bucket_dump(i);
-    if (dump.length() > 400) {
-      ESP_LOGCONFIG(this->logtag_, "%s", dump.c_str());
-      dump.clear();
+    string_buffer.add("\n");
+    this->text_registers_.bucket_dump_to(string_buffer, i);
+    if (string_buffer.length() > 400) {
+      ESP_LOGCONFIG(this->logtag_, "%s", string_buffer.c_str());
+      string_buffer.clear();
     }
   }
-  if (dump.length()) {
-    ESP_LOGCONFIG(this->logtag_, "%s", dump.c_str());
-    dump.clear();
+  if (string_buffer.length()) {
+    ESP_LOGCONFIG(this->logtag_, "%s", string_buffer.c_str());
   }
 #endif  // defined(VEDIRECT_USE_TEXTFRAME)
 
@@ -207,15 +206,16 @@ const char *Manager::build_entity_name(const REG_DEF *reg_def, const char *name)
   if (name == nullptr) {
     // If no name provided, use the register_id as name and preset the temporary buffer.
     // We'll then allocate as needed depending on whether we need to prefix with vedirect name/id.
-    sprintf(reg_name_buf, "0x%04X", (int) reg_def->register_id);
+    snprintf(reg_name_buf, sizeof(reg_name_buf), "0x%04X", (int) reg_def->register_id);
   }
   if (this->vedirect_name_ || this->has_multi_manager()) {
     const char *manager_name = this->vedirect_name_ ? this->vedirect_name_ : this->vedirect_id_;
     if (name == nullptr) {
       name = reg_name_buf;
     }
-    char *entity_name = new char[strlen(manager_name) + strlen(name) + 2];
-    sprintf(entity_name, FMT_JOIN_UNDERSCORE, manager_name, name);
+    auto entity_name_size = strlen(manager_name) + strlen(name) + 2;
+    char *entity_name = new char[entity_name_size];
+    snprintf(entity_name, entity_name_size, FMT_JOIN_UNDERSCORE, manager_name, name);
     name = entity_name;
   } else {
     if (name == nullptr) {
@@ -442,7 +442,7 @@ void Manager::on_frame_hex_(const RxHexFrame &hexframe) {
     goto _forward_to_register;
   }
 
-  if (request = this->requests_read_) {
+  if ((request = this->requests_read_)) {
     switch (rx_command) {
       case HEXFRAME::COMMAND::Get:
       case HEXFRAME::COMMAND::Set:

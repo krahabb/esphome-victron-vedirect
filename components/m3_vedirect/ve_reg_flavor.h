@@ -24,6 +24,10 @@
 #pragma once
 #include "ve_reg_macro.h"
 
+namespace esphome {
+namespace m3_vedirect {
+namespace m3_ve_reg {
+
 #if 0
 // debug/testing preset environment: remove on release
 #define VEDIRECT_FLAVOR_ALL
@@ -144,3 +148,7 @@
 #else
 #define DEF_ANY N
 #endif
+
+}  // namespace m3_ve_reg
+}  // namespace m3_vedirect
+}  // namespace esphome

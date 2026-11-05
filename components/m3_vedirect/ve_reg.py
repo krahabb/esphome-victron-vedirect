@@ -2,13 +2,13 @@
 AUTO GENERATED - See generator.py
 """
 
-from collections import namedtuple
 import enum
 from functools import cached_property
+import typing
 
 import esphome.codegen as cg
 
-ns = cg.global_ns.namespace("m3_ve_reg")
+ns = cg.esphome_ns.namespace("m3_vedirect").namespace("m3_ve_reg")
 
 
 class MockEnum(enum.IntEnum):
@@ -318,7 +318,13 @@ class TYPE(MockEnum):
         return REG_DEF_struct.enum("TYPE", is_class=True)
 
 
-REG_DEF = namedtuple("REG_DEF", ["flavor", "cls", "register_id", "access"])
+class REG_DEF(typing.NamedTuple):
+    flavor: str
+    cls: CLASS
+    register_id: int
+    access: ACCESS
+
+
 REG_DEFS = {
     TYPE.BLE_MODE.name: REG_DEF("ANY", CLASS.BITMASK, 0x0090, ACCESS.READ_WRITE),
     TYPE.PRODUCT_ID.name: REG_DEF("ANY", CLASS.VOID, 0x0100, ACCESS.CONSTANT),

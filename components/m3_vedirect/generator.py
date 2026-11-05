@@ -1,5 +1,6 @@
 from io import TextIOWrapper
 import os
+from pathlib import Path
 import re
 import typing
 
@@ -12,15 +13,14 @@ ve_reg_py: TextIOWrapper
 
 
 def _read_file(file_name: str):
-    with open(file_name, encoding="utf-8") as f:
+    with Path(file_name).open(encoding="utf-8") as f:
         f_data = f.read()
         # remove block comments
         f_data = re.sub(r"/\*.*?\*/", "", f_data, flags=re.DOTALL)
         # remove single line comments
         f_data = re.sub(r"//.*", "", f_data)
         # remove newlines
-        f_data = re.sub(r"\n|\r", "", f_data)
-        return f_data
+        return re.sub(r"\n|\r", "", f_data)
 
 
 def _extract_enum(enum_name: str, file_data: str):
@@ -83,13 +83,13 @@ def generate_docs():
 
         table = [
             f"<!--BEGIN {name}_TABLE-->\n\n",
-            f'| {" | ".join(column.ljust(column_sizes[column_index]) for column_index, column in enumerate(items[0]))} |\n',
-            f'| {" | ".join( "-" * column_size for column_size in column_sizes)} |\n',
+            f"| {' | '.join(column.ljust(column_sizes[column_index]) for column_index, column in enumerate(items[0]))} |\n",
+            f"| {' | '.join('-' * column_size for column_size in column_sizes)} |\n",
         ]
 
         table.extend(
             [
-                f'| {" | ".join(column.ljust(column_sizes[column_index]) for column_index, column in enumerate(row))} |\n'
+                f"| {' | '.join(column.ljust(column_sizes[column_index]) for column_index, column in enumerate(row))} |\n"
                 for row in items[1:]
             ]
         )
@@ -139,7 +139,7 @@ def generate_docs():
             "docs/README.md",
             "docs/configuration/REG_DEFS.md",
         ):
-            with open(doc_filename, encoding="utf-8") as doc_file:
+            with Path(doc_filename).open(encoding="utf-8") as doc_file:
                 doc_src = doc_file.read()
 
             doc_dst = re.sub(
@@ -157,8 +157,8 @@ def generate_docs():
             )
 
             if doc_dst != doc_src:
-                with open(
-                    doc_filename, mode="w", encoding="utf-8", newline="\n"
+                with Path(doc_filename).open(
+                    mode="w", encoding="utf-8", newline="\n"
                 ) as doc_file:
                     doc_file.write(doc_dst)
 
@@ -167,7 +167,7 @@ def generate_docs():
         FLAVOR_EXAMPLE = "docs/samples/m3_vedirect_flavor_%s_example.yaml"
         INDENT_YAML = "  "
 
-        with open(FLAVOR_TEMPLATE, encoding="utf-8") as flavor_template_file:
+        with Path(FLAVOR_TEMPLATE).open(encoding="utf-8") as flavor_template_file:
             flavor_example = flavor_template_file.read()
 
         flavor_example = flavor_example.replace("# flavor", f"flavor: [{flavor}]")
@@ -220,8 +220,7 @@ def generate_docs():
         def _inflate_flavor(flavor, inflated: set):
             """Returns a set with all of the sub-flavors that would be automatically defined
             when defining the provided 'flavor' (see ve_reg_flavor.h)"""
-            sub_flavors = ve_reg.FLAVOR_DEPENDENCIES[flavor]
-            for sub_flavor in sub_flavors:
+            for sub_flavor in ve_reg.FLAVOR_DEPENDENCIES[flavor]:
                 inflated.add(sub_flavor)
                 _inflate_flavor(sub_flavor, inflated)
             return inflated
@@ -244,7 +243,7 @@ def generate_docs():
                         f"{INDENT_YAML}{INDENT_YAML}vedirect_entities:\n",
                     )
                 )
-                for reg_def_type, reg_def in platform_entities.items():
+                for reg_def_type in platform_entities:
                     flavor_example += "".join(
                         (
                             f"{INDENT_YAML}{INDENT_YAML}{INDENT_YAML}- register: {reg_def_type}\n",
@@ -252,8 +251,8 @@ def generate_docs():
                         )
                     )
 
-        with open(
-            FLAVOR_EXAMPLE % flavor, mode="w", encoding="utf-8", newline="\n"
+        with Path(FLAVOR_EXAMPLE % flavor).open(
+            mode="w", encoding="utf-8", newline="\n"
         ) as flavor_example_file:
             flavor_example_file.write(flavor_example)
 
@@ -267,11 +266,11 @@ def generate():
     ve_reg_py.writelines(
         (
             '"""\nAUTO GENERATED - See generator.py\n"""\n\n',
-            "from collections import namedtuple\n",
             "import enum\n",
             "from functools import cached_property\n",
+            "import typing\n",
             "\nimport esphome.codegen as cg\n",
-            '\nns = cg.global_ns.namespace("m3_ve_reg")\n',
+            '\nns = cg.esphome_ns.namespace("m3_vedirect").namespace("m3_ve_reg")\n',
             "\n\nclass MockEnum(enum.IntEnum):\n",
             f"{INDENT_PY}@cached_property\n",
             f"{INDENT_PY}def ns(self):\n",
@@ -294,20 +293,20 @@ def generate():
     for match in re.finditer(
         r"#ifdef\s*VEDIRECT_FLAVOR_(\w*)(.*?)#endif", f_ve_reg_flavor_h
     ):
-        # flavors.append(match.group(1))
-        sub_flavors = []
-        for sub_match in re.finditer(
-            r"#define\s*VEDIRECT_FLAVOR_(\w*)", match.group(2)
-        ):
-            sub_flavors.append(sub_match.group(1))
-        flavors[match.group(1)] = sub_flavors
+        flavors[match.group(1)] = [
+            sub_match.group(1)
+            for sub_match in re.finditer(
+                r"#define\s*VEDIRECT_FLAVOR_(\w*)", match.group(2)
+            )
+        ]
     _declare_enum("Flavor", flavors, "enum.StrEnum")
     ve_reg_py.write("\n\nFLAVOR_DEPENDENCIES = {\n")
     for _flavor, _dependencies in flavors.items():
         if _dependencies:
             ve_reg_py.write(f"{INDENT_PY}Flavor.{_flavor}.name: [\n")
-            for _dep in _dependencies:
-                ve_reg_py.write(f"{INDENT_PY}{INDENT_PY}Flavor.{_dep}.name,\n")
+            ve_reg_py.writelines(
+                f"{INDENT_PY}{INDENT_PY}Flavor.{_dep}.name,\n" for _dep in _dependencies
+            )
             ve_reg_py.write(f"{INDENT_PY}],\n")
         else:
             ve_reg_py.write(f"{INDENT_PY}Flavor.{_flavor}.name: [],\n")
@@ -324,7 +323,7 @@ def generate():
     _declare_mock_enum("TYPE", reg_defs, "REG_DEF")
     ve_reg_py.writelines(
         (
-            '\n\nREG_DEF = namedtuple("REG_DEF", ["flavor", "cls", "register_id", "access"])\n',
+            '\n\nREG_DEF = typing.NamedTuple("REG_DEF", [("flavor", str), ("cls", CLASS), ("register_id", int), ("access", ACCESS)])\n',
             "REG_DEFS = {\n",
         )
     )
@@ -338,14 +337,10 @@ def generate():
 
 if __name__ == "__main__":
     # check if we're running in vscode root working dir
-    if os.path.exists("esphome"):
-        current_dir = os.getcwd()
-        vedirect_path = os.path.join(
-            current_dir, "esphome", "components", "m3_vedirect"
-        )
-        os.chdir(vedirect_path)
+    if Path("esphome").exists():
+        os.chdir(Path.cwd() / "esphome" / "components" / "m3_vedirect")
 
-    with open(VE_REG_PY, mode="w", encoding="utf-8", newline="\n") as ve_reg_py:
+    with Path(VE_REG_PY).open(mode="w", encoding="utf-8", newline="\n") as ve_reg_py:
         generate()
 
     # Here we'll use the generated ve_reg.py to build some docs

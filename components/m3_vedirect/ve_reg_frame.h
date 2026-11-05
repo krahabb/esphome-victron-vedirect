@@ -3,6 +3,8 @@
 #include <string>
 #include <cstring>  // need memcpy
 
+namespace esphome {
+namespace m3_vedirect {
 namespace m3_ve_reg {
 
 // VEDIRECT_USE_HEXFRAME and VEDIRECT_USE_TEXTFRAME can be used to enable/disable
@@ -21,14 +23,14 @@ namespace m3_ve_reg {
 // This is needed since our FrameHandler statically allocates the receiving HexFrame
 // buffer in order to optimize memory management and performance
 #ifndef VEDIRECT_HEXFRAME_MAX_SIZE
-#define VEDIRECT_HEXFRAME_MAX_SIZE 64
+static constexpr uint8_t VEDIRECT_HEXFRAME_MAX_SIZE = 64;
 #endif
 #endif  // defined(VEDIRECT_USE_HEXFRAME)
 
 #if defined(VEDIRECT_USE_TEXTFRAME)
-#define VEDIRECT_NAME_LEN 9
-#define VEDIRECT_VALUE_LEN 33
-#define VEDIRECT_RECORDS_COUNT 22
+static constexpr uint8_t VEDIRECT_NAME_LEN = 9;
+static constexpr uint8_t VEDIRECT_VALUE_LEN = 33;
+static constexpr uint8_t VEDIRECT_RECORDS_COUNT = 22;
 #endif  // defined(VEDIRECT_USE_TEXTFRAME)
 
 #if defined(VEDIRECT_USE_HEXFRAME)
@@ -428,3 +430,5 @@ class FrameHandler {
 };
 
 }  // namespace m3_ve_reg
+}  // namespace m3_vedirect
+}  // namespace esphome

@@ -3,6 +3,11 @@
     code from: https://stackoverflow.com/questions/5586429/ifdef-inside-define
 
 */
+#pragma once
+namespace esphome {
+namespace m3_vedirect {
+namespace m3_ve_reg {
+
 #define PASTE_(x, y) x##y
 #define PASTE(x, y) PASTE_(x, y)
 #define PASTE3_(x, y, z) x##y##z
@@ -53,3 +58,7 @@
 #define XNOR(x, y) PASTE3(x, _XNOR_, y)
 
 #define IF2(x, y, z) PASTE3(x, y, z)
+
+}  // namespace m3_ve_reg
+}  // namespace m3_vedirect
+}  // namespace esphome

@@ -143,17 +143,17 @@ void TextSensor::parse_hex_app_ver_(Register *hex_register, const RxHexFrame *he
   char buf[32];
   switch (sw_type) {
     case 0x40:  // release
-      sprintf(buf, "%hhu.%.2hhu", major, minor);
+      snprintf(buf, sizeof(buf), "%hhu.%.2hhu", major, minor);
       break;
     case 0xC0:  // beta
-      sprintf(buf, "%hhu.%.2hhu-beta", major, minor);
+      snprintf(buf, sizeof(buf), "%hhu.%.2hhu-beta", major, minor);
       break;
     case 0x80:  // tester
-      sprintf(buf, "%hhu.%.2hhu-tester", major, minor);
+      snprintf(buf, sizeof(buf), "%hhu.%.2hhu-tester", major, minor);
       break;
     // case 0x00:  // bootloader
     default:
-      sprintf(buf, "%hhu.%.2hhu-bootloader", major, minor);
+      snprintf(buf, sizeof(buf), "%hhu.%.2hhu-bootloader", major, minor);
       break;
   }
   static_cast<TextSensor *>(hex_register)->parse_string_(buf);

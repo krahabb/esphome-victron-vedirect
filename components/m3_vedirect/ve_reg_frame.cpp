@@ -1,6 +1,8 @@
 #include "ve_reg_frame.h"
 #include <string.h>
 
+namespace esphome {
+namespace m3_vedirect {
 namespace m3_ve_reg {
 
 #if defined(VEDIRECT_USE_HEXFRAME)
@@ -390,3 +392,5 @@ static_assert(sizeof(_a) == 52, "HexFrame_Set size failure = ");
 */
 
 }  // namespace m3_ve_reg
+}  // namespace m3_vedirect
+}  // namespace esphome

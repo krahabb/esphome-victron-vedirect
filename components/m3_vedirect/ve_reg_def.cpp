@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <cstring>
 
+namespace esphome {
+namespace m3_vedirect {
 namespace m3_ve_reg {
 
 const char *ENUM_DEF::lookup_label(enum_t value) {
@@ -23,7 +25,7 @@ ENUM_DEF::LOOKUP_RESULT ENUM_DEF::get_lookup(enum_t value) {
   result.index = std::distance(this->LOOKUPS.begin(), lookup_def_it);
   if ((lookup_def_it == this->LOOKUPS.end()) || (lookup_def_it->value != value)) {
     char *label = new char[5];
-    sprintf(label, "0x%02X", (int) value);
+    snprintf(label, 5, "0x%02X", (int) value);
     this->LOOKUPS.insert(lookup_def_it, {value, label});
     result.lookup_def = &this->LOOKUPS[result.index];
     result.added = true;
@@ -99,3 +101,5 @@ const TEXT_DEF *TEXT_DEF::find_type(REG_DEF::TYPE register_type) {
 }
 
 }  // namespace m3_ve_reg
+}  // namespace m3_vedirect
+}  // namespace esphome

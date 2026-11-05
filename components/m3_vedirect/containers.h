@@ -1,11 +1,121 @@
 #pragma once
 
+#include "esphome/core/helpers.h"
+
+#include <cstdarg>
 #include <cstddef>
 #include <cmath>
-#include <string>
+#include <cstring>
 
 namespace esphome {
 namespace m3_vedirect {
+
+/// @brief Helper class to manage building strings in local storage (stack) so to
+/// avoid std::string heap overhead and fragmentation (as per EspHome design)
+/// This class will allocate a local buffer and allow 'easy' buffer filling when
+/// strings need to be added (i.e. string concatenation) with the help of some
+/// frequently used string conversions (i.e. ints, hex or so)
+/// @tparam BUFFER_SIZE: template argument to make up for the pre-allocated local storage
+class StringBuffer {
+ public:
+  StringBuffer(char *buffer, size_t size) : buffer_(buffer), size_(size), length_(0) { *buffer = '\0'; }
+
+  auto size() const { return this->size_; }
+  auto length() const { return this->length_; }
+  auto available() const { return this->size_ - this->length_; }
+  bool full() const { return this->available() <= 1; }
+  const char *c_str() const { return this->buffer_; }
+  char *tail() { return this->buffer_ + this->length_; }
+
+  void clear() {
+    *(this->buffer_) = '\0';
+    this->length_ = 0;
+  }
+
+  const char *add(const char *str) {
+    auto available = this->available();
+    if (available < 2) {
+      return nullptr;
+    } else {
+      auto str_len = strlen(str);
+      if (str_len >= available) {
+        str_len = available - 1;
+      }
+      auto tail = this->tail();
+      memcpy(tail, str, str_len);
+      tail[str_len] = '\0';
+      this->length_ += str_len;
+      return tail;
+    }
+  }
+
+  const char *add(const char chr) {
+    auto available = this->available();
+    if (available < 2) {
+      return nullptr;
+    } else {
+      auto tail = this->tail();
+      *tail = chr;
+      tail[1] = '\0';
+      this->length_ += 1;
+      return tail;
+    }
+  }
+
+  const char *format(const char *fmt, ...) {
+    auto available = this->available();
+    if (available < 2) {
+      return nullptr;
+    } else {
+      auto tail = this->tail();
+      va_list args;
+      va_start(args, fmt);
+      int result = std::vsnprintf(tail, available, fmt, args);
+      va_end(args);
+      // Optional check: See if the string was truncated
+      if (result >= available) {
+        // The output was truncated to fit this->available() - 1 characters
+        this->length_ = this->size_ - 1;
+      } else if (result >= 0) {
+        this->length_ += result;
+      }
+      return tail;
+    }
+  }
+
+  template<typename T> const char *add_hex(T value) {
+    size_t needed_size = format_hex_prefixed_size(sizeof(T));
+    if (this->available() < needed_size) {
+      return nullptr;
+    } else {
+      auto tail = this->tail();
+      tail[0] = '0';
+      tail[1] = 'x';
+      value = convert_big_endian(value);
+      format_hex_to(tail + 2, this->available() - 2, reinterpret_cast<const uint8_t *>(&value), sizeof(value));
+      return tail;
+    }
+  }
+
+ protected:
+  char *const buffer_;
+  const int size_;
+  int length_;
+};
+
+/// @brief Helper class to manage building strings in local storage (stack) so to
+/// avoid std::string heap overhead and fragmentation (as per EspHome design)
+/// This class will allocate a local buffer and allow 'easy' buffer filling when
+/// strings need to be added (i.e. string concatenation) with the help of some
+/// frequently used string conversions (i.e. ints, hex or so)
+/// @tparam BUFFER_SIZE: template argument to make up for the pre-allocated local storage
+template<size_t BUFFER_SIZE> class StaticStringBuffer : public StringBuffer {
+ public:
+  StaticStringBuffer() : StringBuffer(this->static_buffer_, BUFFER_SIZE) {}
+
+ protected:
+  char static_buffer_[BUFFER_SIZE];
+};
 
 // fix wrong static_assert behavior in uninstantiated templates
 // https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2593r1.html
@@ -56,10 +166,8 @@ template<typename TKey, typename TValue, typename TBucket> class Bucket {
   bucket_type *bucket_next() const { return this->bucket_next_; }
 
   /// @brief Placeholder implementation for debug dumping
-  std::string bucket_dump() const requires std::is_integral_v<TKey> { return std::to_string(this->bucket_key_); }
-
-  std::string bucket_dump() const requires std::is_convertible_v<TKey, std::string> {
-    return std::string(this->bucket_key_);
+  const char *bucket_dump_to(StringBuffer &string_buffer) const requires std::is_integral_v<TKey> {
+    return string_buffer.add_hex(this->bucket_key_);
   }
 
  protected : Bucket() = default;
@@ -67,7 +175,7 @@ template<typename TKey, typename TValue, typename TBucket> class Bucket {
   Bucket(TKey key, bucket_type *next) : bucket_key_(key), bucket_next_(next) {}
 
  private:
-  template<size_t, typename, typename, typename, typename, typename, typename> friend class TinyMap;
+  template<uint8_t, typename, typename, typename, typename, typename, typename> friend class TinyMap;
 
   void init_(TKey key, bucket_type *next) {
     this->bucket_key_ = key;
@@ -103,8 +211,8 @@ template<typename TKey, typename TValue> class ValueBucket : public Bucket<TKey,
   };
   using allocator_type = Allocator;
 
-  value_type bucket_value() { return static_cast<TValue *>(this); }
-  const value_type bucket_value() const { return static_cast<const TValue *>(this); }
+  TValue *bucket_value() { return static_cast<TValue *>(this); }
+  const TValue *bucket_value() const { return static_cast<const TValue *>(this); }
 };
 
 /// @brief A (simple) Bucket implementation where the mapped object (TValue) is contained in the bucket.
@@ -132,6 +240,19 @@ template<typename TKey, typename TValue> class SimpleBucket : public Bucket<TKey
   SimpleBucket(TKey key, TValue value, bucket_type *next) : bucket_base_type(key, next), value_(value) {}
 };
 
+class TinyMapBase {
+ public:
+  struct stats {
+    size_t num_buckets{0};
+    size_t num_elements{0};
+    size_t max_chain_length{0};
+    float load_factor{0.0f};
+    float fill_factor{0.0f};  // number of used buckets in the main array
+    float load_average{0.0f};
+    float load_variance{0.0f};
+    float load_stddev{0.0f};
+  };
+};
 /// @brief An optimized container for the set of HEX registers managed by the Manager.
 /// This basically tries to split the lookup process through a fast hash map lookup and
 /// a short linear search in case of collisions.
@@ -140,17 +261,17 @@ template<typename TKey, typename TValue> class SimpleBucket : public Bucket<TKey
 /// reasonable with 256 being a bit memory hungry (1KB of RAM for the bucket array).
 /// but will provide the fastest lookups with very few collisions. (considering HEX
 /// registers have great variability on low nibble/byte)
-template<size_t MAP_SIZE, typename TKey, typename TValue, typename TBucket = SimpleBucket<TKey, TValue>,
+template<uint8_t MAP_SIZE, typename TKey, typename TValue, typename TBucket = SimpleBucket<TKey, TValue>,
          typename THash = hash_default<TKey>, typename TCompare = compare_default<TKey>,
          typename TBucketAllocator = TBucket::allocator_type>
-class TinyMap {
+class TinyMap : public TinyMapBase {
  public:
   using bucket_type = TBucket;
   using bucket_allocator_type = TBucketAllocator;
   using hash_type = THash;
   using compare_type = TCompare;
   using tinymap_type = TinyMap<MAP_SIZE, TKey, TValue, TBucket, THash, TCompare, TBucketAllocator>;
-  static constexpr size_t map_size = MAP_SIZE;
+  static constexpr uint8_t map_size = MAP_SIZE;
 
   /// @brief An iterator for traversing the registers in the map.
   class iterator {
@@ -203,7 +324,8 @@ class TinyMap {
   // and keep things simple. Each bucket contains a linked list of registers so that
   // we can handle collisions through a (supposedly) short linear search.
 
-  static_assert((MAP_SIZE > 0) && (MAP_SIZE & (MAP_SIZE - 1)) == 0, "TinyMap: MAP_SIZE must be a power of 2");
+  static_assert((MAP_SIZE > 0) && (MAP_SIZE <= 256) && (MAP_SIZE & (MAP_SIZE - 1)) == 0,
+                "TinyMap: MAP_SIZE must be a power of 2 and not greater than 256");
 
   inline static size_t hash(TKey key) {
     THash hasher;
@@ -268,27 +390,16 @@ class TinyMap {
     return true;
   }
 
-  std::string bucket_dump(size_t bucket_index) const {
-    std::string result;
+  void bucket_dump_to(StringBuffer &string_buffer, size_t bucket_index) const {
     if (bucket_index < MAP_SIZE) {
-      result += "Bucket[" + std::to_string(bucket_index) + "] -> ";
+      string_buffer.format("Bucket[%02X] -> ", static_cast<unsigned int>(bucket_index));
       for (bucket_type *bucket = this->buckets_[bucket_index]; bucket; bucket = bucket->bucket_next_) {
-        result += "[" + bucket->bucket_dump() + "]";
+        string_buffer.add('[');
+        bucket->bucket_dump_to(string_buffer);
+        string_buffer.add(']');
       }
     }
-    return result;
   }
-
-  struct stats {
-    size_t num_buckets{0};
-    size_t num_elements{0};
-    size_t max_chain_length{0};
-    float load_factor{0.0f};
-    float fill_factor{0.0f};  // number of used buckets in the main array
-    float load_average{0.0f};
-    float load_variance{0.0f};
-    float load_stddev{0.0f};
-  };
 
   stats get_stats() const {
     stats result;

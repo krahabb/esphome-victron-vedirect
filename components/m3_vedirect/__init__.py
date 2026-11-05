@@ -1,4 +1,3 @@
-from collections import namedtuple
 import enum
 from functools import partial
 import typing
@@ -120,13 +119,12 @@ CONF_TEXT_LABEL = "text_label"
 # (HEX) Register schema
 CONF_REG_DEF_ID = "reg_def_id"
 CONF_ENUM_DEF_ID = "enum_def_id"
-CONF_ADDRESS = "address"
 CONF_DATA_TYPE = "data_type"
 VEDIRECT_REGISTER_SCHEMA = {
     cv.GenerateID(CONF_REG_DEF_ID): cv.declare_id(ve_reg.REG_DEF_struct),
     cv.GenerateID(CONF_ENUM_DEF_ID): cv.declare_id(ENUM_DEF_struct),
     # binds to the corresponding HEX register
-    cv.Optional(CONF_ADDRESS, default=0): validate_register_id(),
+    cv.Optional(ec.CONF_ADDRESS, default=0): validate_register_id(),
     # configures the format of the HEX register
     cv.Optional(
         CONF_DATA_TYPE, default=ve_reg.DATA_TYPE.VARIADIC.name
@@ -232,6 +230,8 @@ def deflate_flavors(flavors: typing.Iterable):
 
 
 class VEDirectPlatform:
+    """Helper platform descriptor to automate component platforms generator files."""
+
     COMPONENT_NS: typing.Final = m3_vedirect_ns
 
     DEFAULT_DYNAMIC_ENTITIES_MAX: typing.Final = {
@@ -246,7 +246,11 @@ class VEDirectPlatform:
     RegisterEntityT = typing.Callable[[typing.Any, typing.Any], typing.Awaitable[None]]
     register_entity: RegisterEntityT
 
-    CustomEntityDef = namedtuple("CustomEntityDef", ("schema", "define"))
+    class CustomEntityDef(typing.NamedTuple):
+        """This structure describes additional (custom) entities which could be added to the relevant platform."""
+
+        schema: cv.Schema
+        define: str
 
     def __init__(
         self,
@@ -349,7 +353,7 @@ class VEDirectPlatform:
             init_args.append(register_config)
 
         elif isinstance(register_config, dict):
-            register_id = register_config[CONF_ADDRESS]
+            register_id = register_config[ec.CONF_ADDRESS]
             if register_id:
                 define_use_hexframe()
             for _cls in ve_reg.CLASS:
@@ -447,7 +451,6 @@ def validate_manager(config):
 
 CONF_AUTO_CREATE_ENTITIES = "auto_create_entities"
 CONF_PING_TIMEOUT = "ping_timeout"
-CONF_POLLING_INTERVAL = "polling_interval"
 CONF_FLAVOR = "flavor"
 CONF_ON_FRAME_RECEIVED = "on_frame_received"
 CONFIG_SCHEMA = (
@@ -468,7 +471,7 @@ CONFIG_SCHEMA = (
                     cv.Optional(CONF_AUTO_CREATE_ENTITIES): cv.boolean,
                     cv.Optional(CONF_PING_TIMEOUT): cv.positive_time_period_seconds,
                     cv.Optional(
-                        CONF_POLLING_INTERVAL
+                        ec.CONF_POLLING_INTERVAL
                     ): cv.positive_time_period_milliseconds,
                     cv.Optional(CONF_ON_FRAME_RECEIVED): automation.validate_automation(
                         {
@@ -528,8 +531,8 @@ async def to_code(config: dict):
             )
         if CONF_PING_TIMEOUT in config_hexframe:
             cg.add(var.set_ping_timeout(config_hexframe[CONF_PING_TIMEOUT]))
-        if CONF_POLLING_INTERVAL in config_hexframe:
-            cg.add(var.set_polling_interval(config_hexframe[CONF_POLLING_INTERVAL]))
+        if ec.CONF_POLLING_INTERVAL in config_hexframe:
+            cg.add(var.set_polling_interval(config_hexframe[ec.CONF_POLLING_INTERVAL]))
 
         for conf in config_hexframe.get(CONF_ON_FRAME_RECEIVED, []):
             trigger = cg.new_Pvariable(conf[ec.CONF_TRIGGER_ID], var)
@@ -544,12 +547,19 @@ async def to_code(config: dict):
 # ACTIONS
 
 # a single validator instance so it can be looked up in _CTYPE_VALIDATOR_MAP
+_validate_command = cv.hex_int_range(
+    min=0, max=8
+)  # currently known commands range from 0 to 8
 _validate_register_id = validate_register_id()
 
 _CTYPE_VALIDATOR_MAP = {
     cv.string: cg.std_string,
     cv.int_: cg.int_,
+    _validate_command: cg.uint8,
     _validate_register_id: cg.uint16,
+    cv.hex_uint8_t: cg.uint8,
+    cv.hex_uint16_t: cg.uint16,
+    cv.hex_uint32_t: cg.uint32,
 }
 
 
@@ -569,7 +579,6 @@ async def action_to_code(
     return var
 
 
-CONF_COMMAND = "command"
 CONF_REGISTER_ID = "register_id"
 CONF_DATA_SIZE = "data_size"
 MANAGER_ACTIONS = {
@@ -579,10 +588,10 @@ MANAGER_ACTIONS = {
     },
     "send_command": {
         cv.Optional(CONF_VEDIRECT_ID, default=""): cv.string,
-        cv.Required(CONF_COMMAND): cv.int_,
+        cv.Required(ec.CONF_COMMAND): _validate_command,
         cv.Optional(CONF_REGISTER_ID): _validate_register_id,
-        cv.Optional(ec.CONF_DATA): cv.int_,
-        cv.Optional(CONF_DATA_SIZE): cv.int_,
+        cv.Optional(ec.CONF_DATA): cv.hex_uint32_t,
+        cv.Optional(CONF_DATA_SIZE): cv.hex_uint8_t,
     },
 }
 
@@ -594,6 +603,11 @@ for _action_name, _schema_def in MANAGER_ACTIONS.items():
             for _schema_key, _ctype in _schema_def.items()
         }
     )
-    automation.register_action(f"m3_vedirect.{_action_name}", _action, _schema)(
-        partial(action_to_code, _schema_def)
-    )
+    if cv.Version(2026, 6, 0) <= ESPHOME_VERSION:
+        automation.register_action(
+            f"m3_vedirect.{_action_name}", _action, _schema, synchronous=True
+        )(partial(action_to_code, _schema_def))
+    else:
+        automation.register_action(f"m3_vedirect.{_action_name}", _action, _schema)(
+            partial(action_to_code, _schema_def)
+        )
