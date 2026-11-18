@@ -323,7 +323,7 @@ class VEDirectPlatform:
                 cv.Optional(type): custom_entity_def.schema
                 for type, custom_entity_def in self.custom_entities.items()
             }
-        ).add_extra(self._validate_platform)
+        )  # flavor check runs in to_code: the hub isn't registered yet when platforms validate
 
     def _validate_platform(self, config):
         # Ensure CONF_TYPE is available based off Manager flavor
@@ -411,6 +411,7 @@ class VEDirectPlatform:
 
     async def to_code(self, config: dict):
         manager = await cg.get_variable(config[CONF_VEDIRECT_ID])
+        self._validate_platform(config)
         for entity_key, entity_config in config.items():
             if entity_key == CONF_VEDIRECT_ENTITIES:
                 for _entity_config in entity_config:
